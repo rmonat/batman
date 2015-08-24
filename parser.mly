@@ -15,10 +15,8 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)
-
-%{
-  open Abs
+(* Copyright (C) Raphaël Monat 2015.                                       *)%{
+  open Abs_init
 %}
 
 %token T_INIT
@@ -84,73 +82,58 @@
 
 
 
-%start<Abs.thread list * Abs.vardecl list * Abs.bexpr> prog
-%type<Abs.thread list> prog2
-%type <Abs.cmd> cmd
-%type <Abs.cmd> cmd2
-/*%start<Abs.cmd> cmd*/
-%type <Abs.aexpr> aexp
-%type <Abs.bexpr> bexp
-%type <Abs.exp> exp
-%type <Abs.vardecl> vardecl
-%type <Abs.vardecl list> vardecll
-%type <Abs.thread> thread_decl
+%start<Abs_init.ithread list * Abs_init.ivardecl list * Abs_init.iexpr> prog
+%type<Abs_init.ithread list> prog2
+%type <Abs_init.icmd> cmd
+%type <Abs_init.icmd> cmd2
+/*%start<Abs_init.cmd> cmd*/
+%type <Abs_init.iexpr> exp
+%type <Abs_init.ivardecl> vardecl
+%type <Abs_init.ivardecl list> vardecll
+%type <Abs_init.ithread> thread_decl
 
 %%
 
-aexp :
-| x = T_int_litt { AInt x}
-| v = T_id { AVar v}
-(*| T_RAND { ARand } divergence with concurinterproc. (but only way to manage rands in bddapron ?...*)
-| T_LBRACKET x = T_int_litt T_COMMA y = T_int_litt T_RBRACKET { ARand (x, y) }
-| x = aexp T_PLUS y = aexp {APlus (x, y)}
-| x = aexp T_MINUS y = aexp {AMinus (x, y)}
-| x = aexp T_TIMES y = aexp {ATimes (x, y)}
-| x = aexp T_DIVIDED y = aexp {ADivided (x, y)}
-| x = aexp T_PERCENT y = aexp {APercent (x, y)}
-| T_MINUS x = aexp {ANeg x}
-| T_LPAR x = aexp T_RPAR {x}
-
-bexp :
-| x = T_BOOL {if(x = true) then BTrue else BFalse}
-/*| v = var {BVar v}*/
-| x = bexp T_BAND y = bexp {Band (x, y)}
-| x = bexp T_BOR y = bexp {Bor (x, y)}
-| x = aexp T_BEQUAL y = aexp {Bequal (x, y)}
-| x = aexp T_BLESS y = aexp {Bless (x, y)}
-| x = aexp T_BLESSE y = aexp {Blesse (x, y)}
-| x = aexp T_GREATER y = aexp {Bgreater (x, y)}
-| x = aexp T_GREATERE y = aexp {Bgreatere (x, y)}
-| T_NOT x = bexp {BNot x}
-| T_LPAR x = bexp T_RPAR {x}
 
 exp :
-| a = aexp { CstA a}
-| b = bexp { CstB b}
-/*| T_RAND {CstRand}*/
-/*| T_LPAR x = exp T_RPAR {x}*/
+| x = T_int_litt { IAInt x}
+| v = T_id { IAVar v}
+| T_LBRACKET x = T_int_litt T_COMMA y = T_int_litt T_RBRACKET { IARand (x, y) }
+| x = exp T_PLUS y = exp {IAPlus (x, y)}
+| x = exp T_MINUS y = exp {IAMinus (x, y)}
+| x = exp T_TIMES y = exp {IATimes (x, y)}
+| x = exp T_DIVIDED y = exp {IADivided (x, y)}
+| x = exp T_PERCENT y = exp {IAPercent (x, y)}
+| T_MINUS x = exp {IANeg x}
+| x = T_BOOL {if(x = true) then IBTrue else IBFalse}
+| x = exp T_BAND y = exp {IBand (x, y)}
+| x = exp T_BOR y = exp {IBor (x, y)}
+| x = exp T_BEQUAL y = exp {IBequal (x, y)}
+| x = exp T_BLESS y = exp {IBless (x, y)}
+| x = exp T_BLESSE y = exp {IBlesse (x, y)}
+| x = exp T_GREATER y = exp {IBgreater (x, y)}
+| x = exp T_GREATERE y = exp {IBgreatere (x, y)}
+| T_NOT x = exp {IBNot x}
+| T_LPAR x = exp T_RPAR {x}
 
 cmd :
-| cl = cmd c = commande {CSeq(cl, c)}
+| cl = cmd c = commande {ICSeq(cl, c)}
 | c = commande {c}
 
 commande :
 | c = cmd2 T_SEMICOLON {c}
 
 cmd2 :
-| T_ASSUME b = bexp { CAssume b}
-| T_SKIP { CSkip }
-| v = T_id T_EQUAL e = exp { CAssign (v, e); }
-| T_IF b = bexp T_THEN c1 = cmd T_ENDIF {CIf(b, c1, CSkip)}
-| T_IF b = bexp T_THEN T_ELSE c1 = cmd T_ENDIF {CIf(b, CSkip, c1)}
-| T_IF b = bexp T_THEN c1 = cmd T_ELSE c2 = cmd T_ENDIF {CIf(b, c1, c2)}
-| T_WHILE b = bexp T_DO T_DONE {CWhile(b, CSkip)}
-| T_WHILE b = bexp T_DO c = cmd T_DONE {CWhile(b, c)}
-
+| T_ASSUME b = exp { ICAssume b}
+| T_SKIP { ICSkip }
+| v = T_id T_EQUAL e = exp { ICAssign (v, e); }
+| T_IF b = exp T_THEN c1 = cmd T_ENDIF {ICIf(b, c1, ICSkip)}
+| T_IF b = exp T_THEN c1 = cmd T_ELSE c2 = cmd T_ENDIF {ICIf(b, c1, c2)}
+| T_WHILE b = exp T_DO c = cmd T_DONE {ICWhile(b, c)}
 
 prog :
-| T_VAR v = vardecll T_INIT b = bexp T_SEMICOLON p = prog2 { (p, v, b) }
-| T_VAR v = vardecll p = prog2 { (p, v, BTrue) }
+| T_VAR v = vardecll T_INIT b = exp T_SEMICOLON p = prog2 { (p, v, b) }
+| T_VAR v = vardecll p = prog2 { (p, v, IBTrue) }
 
 
 prog2 :
@@ -158,7 +141,7 @@ prog2 :
 | th = thread_decl p = prog2 { th::p }
 
 vardecl :
-| v = T_id T_COLON t = T_id {if(t = "int") then VarDeclI v else VarDeclB v}
+| v = T_id T_COLON t = T_id {if(t = "int") then IVarDeclI v else IVarDeclB v}
 
 vardecll :
 | v = vardecl T_SEMICOLON { [v] }
@@ -166,8 +149,8 @@ vardecll :
 
 thread_decl : 
 | T_THREAD t_id = T_id T_COLON
-			     T_BEGIN c = cmd T_END { Thread(t_id, [], c)}
+			     T_BEGIN c = cmd T_END { IThread(t_id, [], c)}
 | T_THREAD t_id = T_id T_COLON
 			     T_VAR v = vardecll
-			     T_BEGIN c = cmd T_END { Thread(t_id, v, c)}
+			     T_BEGIN c = cmd T_END { IThread(t_id, v, c)}
 			     

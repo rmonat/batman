@@ -15,8 +15,8 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)open Abs
-open Eval
+(* Copyright (C) Raphaël Monat 2015.                                       *)
+open Abs
 open Analyzer
 open Lexing
 open Type_prog

@@ -15,8 +15,7 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)
-{
+(* Copyright (C) Raphaël Monat 2015.                                       *){
 open Lexing
 open Parser
 

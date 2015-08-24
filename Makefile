@@ -16,6 +16,7 @@
 # (* <http://www.gnu.org/licenses/>                                          *)
 # (*                                                                         *)
 # (* Copyright (C) Raphaël Monat 2015.                                       *)
+
 # OCAMLC = ocamlc.opt
 # OCAMLOPT = ocamlopt.opt
 # OCAMLDEP = ocamldep
@@ -36,7 +37,9 @@
 all: analyzer
 
 analyzer : 
-	ocamlbuild -lflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/ unix.cma' -lflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/threads/ threads.cma' -cflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/' -cflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/threads/' -use-ocamlfind -tag thread -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp -use-menhir batman.byte
+	ocamlbuild -lflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/ unix.cma' -lflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/threads/ threads.cma' -cflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/' -cflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/threads/' -use-ocamlfind -tag thread -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp,bddapron -use-menhir -libs bddapron batman.byte
+
+
 
 bin:
 	ocamlbuild -cflags '-g' -lflags '-g' -lflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/' -lflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/threads/' -cflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/' -cflags '-I /home/raphael/.opam/4.02.1/lib/ocaml/threads/' -use-ocamlfind -tag thread -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp -use-menhir batman.native
