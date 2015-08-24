@@ -5,3 +5,14 @@ Miné, in the ANTIQUE team, at the ENS Ulm. This code is (c) Raphaël
 Monat 2015, et is distributed under a GPLv3 licence. For more
 information on this project, please consult my internship report: [NOT
 AVAILABLE YET]
+
+== Dependencies ==
+Apron or bddapron, depending on the branch.
+Ocamlbuild
+
+Easiest way to install: use OPAM, 
+
+	opam init --comp 4.0.2
+	opam install apron
+
+A VM will be available soon.
