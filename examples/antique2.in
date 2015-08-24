@@ -1,0 +1,31 @@
+var h:int, c:int, t:int, l:int;
+
+initial h == 0 and c == 0 and t == 0 and l == 0;
+
+thread t1:
+begin
+  while (true) do
+    if (h < 10000) then
+      h = h + 1;
+    endif;
+  done;
+end
+
+thread t2:
+begin
+  while (true) do
+    c = h;
+  done;
+end
+
+thread t3:
+begin
+  while (true) do
+    if ([0, 1] == 0) then 
+      t = 0;
+    else 
+      t = t + c - l;
+    endif;
+    l = c;
+  done;
+end

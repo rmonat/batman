@@ -1,0 +1,47 @@
+var x1:int, z1:int, x2:int, z2:int, x3:int, z3:int, x4:int, z4:int;
+
+initial x1 == 0 and x2 == 0 and x3 == 0 and x4 == 0 and z1 == 0 and z2 == 0 and z3 == 0 and z4 == 0;
+
+thread a1: 
+begin
+   while (z1 < 10000) do
+      z1 = z1 + 1;
+      if (z1 % 2 == 0) then
+      	 x1 = x1 + 2;
+      endif;
+   done;
+end
+
+
+thread a2: 
+begin
+   while (z2 < 10000) do
+      z2 = z2 + 1;
+      if (z2 % 2 == 0) then
+      	 x2 = x2 + 2;
+      endif;
+   done;
+end
+
+
+thread a3: 
+begin
+   while (z3 < 10000) do
+      z3 = z3 + 1;
+      if (z3 % 2 == 0) then
+      	 x3 = x3 + 2;
+      endif;
+   done;
+end
+
+
+thread a4: 
+begin
+   while (z4 < 10000) do
+      z4 = z4 + 1;
+      if (z4 % 2 == 0) then
+      	 x4 = x4 + 2;
+      endif;
+   done;
+end
+

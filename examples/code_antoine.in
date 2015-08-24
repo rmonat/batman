@@ -1,0 +1,20 @@
+var flag:int, x:int;
+initial flag == 1 and x == 10;
+
+thread t1:
+begin
+  while(true) do
+    while not (flag == 1) do done;
+    x = 10;
+    flag = 2;
+  done;
+end
+
+thread t2:
+begin
+  while(true) do
+    while not (flag == 2) do done;
+    x = 20;
+    flag = 1;
+  done;
+end

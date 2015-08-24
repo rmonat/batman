@@ -1,0 +1,31 @@
+var flag:int, x:int;
+
+initial flag == 0 and x == 0;
+
+thread T0:
+begin
+  while (true) do
+    assume(flag == 0);
+    x = 0;
+    flag = 1;
+  done;
+end
+
+thread T1:
+begin
+  while (true) do
+    assume(flag == 1);
+    x = 1;
+    flag = 0;
+  done;
+end
+
+/*thread T3:
+begin
+  while (true) do
+    assume(flag == 3);
+    x = 3;
+    flag = [-100, 100];
+    assume 1 <= flag and flag <= 3;
+  done;
+end*/

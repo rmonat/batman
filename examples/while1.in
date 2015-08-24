@@ -1,0 +1,24 @@
+var x:int, z:int; 
+
+initial z == 0 and x == 0;
+
+thread t: 
+begin 
+   while (z < 10000) do 
+      z = z + 1;
+   done;
+end
+
+
+thread z: 
+begin
+   while (z < 10000) do
+      z = z + 1;
+      if (z % 2 == 0) then
+      	 x = x + 2;
+      endif;
+   done;
+end
+
+
+

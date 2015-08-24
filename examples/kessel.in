@@ -1,0 +1,27 @@
+var b0:bool,b1:bool,turn0:bool,turn1:bool, local0:bool, local1:bool;
+
+thread T0:
+begin
+  assume (not b0 and not b1);
+  while true do
+    b0 = true;
+    local0 = turn1;
+    turn0 = local0;
+    assume (not b1 or (not local0==turn1));
+    skip;
+    b0 = false;
+  done;
+end
+
+thread T1:
+begin
+  assume (not b0 and not b1);
+  while true do
+    b1 = true;
+    local1 = not turn0;
+    turn1 = local1;
+    assume (not b0 or local1==turn0);
+    skip;
+    b1 = false;
+  done;
+end

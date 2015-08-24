@@ -1,0 +1,42 @@
+var x:int, y:int, z:int, t:int;
+
+initial z == 0 and y == 0 and x == 0 and t == 0;
+
+thread t: 
+begin 
+  while (z <= 9999) do 
+    z = z + 1;
+    if (y <= 9) then 
+      y = y + 1; 
+    endif;
+  done ;
+end
+
+
+thread z: 
+begin
+  while (z <= 9999) do
+    z = z + 1;
+    if (x <= y) then 
+      x = x + 1;
+    endif;
+  done;
+end
+
+
+
+thread a: 
+begin
+  while (z <= 9999) do
+    z = z + 1;
+  done;
+end
+
+
+thread b: 
+begin
+  while (z <= 9999) do
+    z = z + 1; /*PERFORMANCE KILLER */
+    t = t + 1;
+  done;
+end

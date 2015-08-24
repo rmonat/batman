@@ -1,0 +1,21 @@
+var flag0:bool, flag1:bool, turn:int, x:int;
+
+initial flag0 == false and flag1 == false and turn == 0 and x == 0;
+
+thread a:
+begin
+  flag0 = true;
+  turn = 1;
+  assume not (flag1 and turn == 1);
+  flag0 = false;
+  x = 0;
+end
+
+
+thread b:
+begin
+  flag1 = true;
+  turn = 0;
+  assume not (flag0 and turn == 0);
+  flag1 = false;
+end

@@ -1,0 +1,23 @@
+var flag:bool, x:int;
+
+initial flag == false and x == 0;
+
+thread T1:
+begin
+  while (true) do
+    while(not flag) do skip; done;
+    x = 10;
+    if (not (x == 10)) then assume false; endif;
+    flag = false;
+  done;
+end
+
+thread T2:
+begin
+  while (true) do
+    while(flag) do skip; done;
+    x = 20;
+    if (not (x == 20)) then assume false; endif;
+    flag = true;
+  done;
+end

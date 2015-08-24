@@ -1,0 +1,7 @@
+var y:int;
+
+initial y == 0;
+
+thread z: begin y = 10; end
+thread y: begin y = 8; end
+thread r: begin y = 12; end

@@ -1,0 +1,21 @@
+var x:int,y:int;
+
+initial x == 0 and y == 0;
+
+thread t1:
+begin
+  while (true) do
+    if (y < 10) then
+       y = y + 1;
+    endif;
+  done;
+end
+
+thread t2:
+begin
+  while (true) do
+    if (x < y) then
+      x = x + 1;
+    endif;
+  done;
+end

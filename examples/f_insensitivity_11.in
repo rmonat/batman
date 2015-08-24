@@ -1,0 +1,63 @@
+var x:int;
+
+initial x == 0;
+
+thread a:
+begin
+  x = x + 1;
+end
+
+thread b:
+begin
+  x = x + 1;
+end
+
+thread c:
+begin
+  x = x + 1;
+end
+
+thread d:
+begin
+  x = x + 1;
+end
+
+thread e:
+begin
+  x = x + 1;
+end
+
+thread f:
+begin
+  x = x + 1;
+end
+
+
+thread g:
+begin
+  x = x + 1;
+end
+
+
+
+thread h:
+begin
+  x = x + 1;
+end
+
+
+thread i:
+begin
+  x = x + 1;
+end
+
+thread j:
+begin
+  x = x + 1;
+end
+
+
+thread k:
+begin
+  x = x + 1;
+end

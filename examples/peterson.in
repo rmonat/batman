@@ -1,0 +1,27 @@
+var b0:int,b1:int,turn:int,g:int;
+
+initial b0 == 0 and b1 == 0 and turn == 0 and g == 0;
+
+thread T0:
+begin
+  while true do
+    g = 0;
+    b0 = 1;
+    turn = 0;
+    assume(b1==0 or turn==1);
+    g = 1;
+    g = 0;
+    b0 = 0;
+  done;
+end
+
+thread T1:
+begin
+  while true do
+    b1 = 1;
+    turn = 1;
+    assume(b0==0 or turn==0);
+    g = g + 1;
+    b1 = 0;
+  done;
+end
