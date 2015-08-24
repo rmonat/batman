@@ -15,10 +15,7 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)
-
-(* Some functions used to print arithematical and boolean expressions*)
-open Abs
+(* Copyright (C) Raphaël Monat 2015.                                       *)open Abs
 
 let rec sprint_aexpr = function
   | AVar v -> v

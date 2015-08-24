@@ -15,82 +15,56 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)
+(* Copyright (C) Raphaël Monat 2015.                                       *)(* open Apron *)
+(* open Abs *)
 
-(* This is a global domain signature, only used with apron_domain
-   then. It is used in BATMAN to handle numerical domains. Errors are
-   not handled. *)
-open Apron
-open Abs
+(* type error = unit *)
 
-type error = unit
+(* module type ABSTRACT_DOMAIN = sig *)
+(*     type t *)
+(*     type var = string *)
 
-module type ABSTRACT_DOMAIN = sig
-    type t
+(*     val apron_of_var : string -> Apron.Var.t *)
 
-    val apron_of_var : string -> Apron.Var.t
-
-    (* creates empty domain *)
-    val empty: unit -> t
-    (* creates a bottom domain, using (the environment of) the domain provided *)
-    val bot : t -> t
-
-    (* creates a top domain, using (the environment of) the domain provided *)
-    val top : t -> t
-		    
-    val is_bot : t -> bool
-
-    (* checks if a domain is included in or equal to another *)
-    val subseteq : t -> t -> bool
-
-    (* checks if a domain equals to another*)
-    val eq : t -> t -> bool
-
-    (* hash of domain *)
-    val hash : t -> int
+(*     val empty: unit -> t *)
+(*     val bot : t -> t *)
+(*     val top : t -> t *)
+		     
+(*     val is_bot : t -> bool *)
+(*     val subseteq : t -> t -> bool *)
+(*     val eq : t -> t -> bool *)
+(*     val hash : t -> int *)
     
-    val print : Format.formatter -> t -> unit
+(*     val print : Format.formatter -> t -> unit *)
+(*     val getdim : t -> int *)
+(*     val getenv : t -> Apron.Environment.t *)
+(*     val var_of_dim : t -> int -> Apron.Var.t *)
 
-    (* returns the dimension (the number of variables) of a domain *)
-    val getdim : t -> int
+(*     val add_vars : ?init:bool -> t -> Apron.Var.t array -> t *)
+(*     val del_vars : t -> Apron.Var.t array -> t *)
+(*     val ren_vars : t -> Apron.Var.t array -> Apron.Var.t array -> t *)
+(*     val add_var : t -> var -> t *)
+(*     val del_var : t -> var -> t *)
 
-    (* returns the environment of the domain *)
-    val getenv : t -> Apron.Environment.t
+(*     val copy : t -> t *)
+(*     val join : t -> t -> t *)
+(*     val join_with : t -> t -> unit *)
+(*     val widen : t -> t -> t *)
+(*     val widen_threshold : t -> t -> Apron.Lincons1.earray -> t *)
 
-    (* given a domain and a dimension i, this function returns the
-       variable corresponding to the ith dimension *)
-    val var_of_dim : t -> int -> Apron.Var.t
+(*     val meet : t -> t -> t *)
+(*     val meet_with : t -> t -> unit *)
 
-    val add_vars : ?init:bool -> t -> Apron.Var.t array -> t
-    val del_vars : t -> Apron.Var.t array -> t
-    val ren_vars : t -> Apron.Var.t array -> Apron.Var.t array -> t
-    val add_var : t -> var -> t
-    val del_var : t -> var -> t
-
-    val copy : t -> t
-    val join : t -> t -> t
-    val join_with : t -> t -> unit
-    val widen : t -> t -> t
-    val widen_threshold : t -> t -> Apron.Lincons1.earray -> t
-
-    val meet : t -> t -> t
-    val meet_with : t -> t -> unit
-
-    val assign : t -> var -> aexpr -> t * error
-    val assign_with : t -> var -> aexpr -> unit
-      
-    (* Given an environment and a boolean expression, this function
-       returns a set of constraints equivalent to the boolean expression,
-       and its negation*)
-    val tcons_of_bexpr : Apron.Environment.t -> bexpr -> Apron.Tcons1.t * Apron.Tcons1.t
+(*     val assign : t -> var -> aexpr -> t * error *)
+(*     val assign_with : t -> var -> aexpr -> unit *)
+(*     val tcons_of_bexpr : Apron.Environment.t -> bexpr -> Apron.Tcons1.t * Apron.Tcons1.t *)
 					    
-    val filter : t -> bexpr -> t * t * error
+(*     val filter : t -> bexpr -> t * t * error *)
 
-    (* Transforms a domain into an array of linear constraints *)
-    val to_lincons_array : t -> Apron.Lincons1.earray
+(*     val to_lincons_array : t -> Apron.Lincons1.earray *)
 			       
-end
+(* end *)
 
 
-let no_err = ()
-let join_err e1 e2 = ()
+(* let no_err = () *)
+(* let join_err e1 e2 = () *)

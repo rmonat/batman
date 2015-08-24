@@ -15,50 +15,31 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)
-open Lexing
+(* Copyright (C) Raphaël Monat 2015.                                       *)open Lexing
+open Bdddomain
 
-type var = string
 
-type aexpr = 
-  | AVar of var
-  | AInt of int
-  | ARand of int * int
-  | APlus of aexpr * aexpr
-  | AMinus of aexpr * aexpr
-  | ATimes of aexpr * aexpr
-  | ADivided of aexpr * aexpr
-  | APercent of aexpr * aexpr
-  | ANeg of aexpr
+module Abs(D:BDD_ABSTRACT_DOMAIN) = 
+  struct
+    type var = string
 
-type bexpr =
-(*  | BVar of var*)
-  | BTrue | BFalse
-  | Band of bexpr * bexpr
-  | Bor of bexpr * bexpr
-  | BNot of bexpr
-  | Bequal of aexpr * aexpr
-  | Blesse of aexpr * aexpr
-  | Bless  of aexpr * aexpr
-  | Bgreater  of aexpr * aexpr
-  | Bgreatere  of aexpr * aexpr
+    type aexpr = D.apron_expr
 
-type exp =
-  | CstA of aexpr
-  | CstB of bexpr
-(*  | CstRand*)
+    type bexpr = D.bool_expr
 
-type cmd = 
-  | CSkip
-  | CAssign of var * exp
-  | CAssume of bexpr
-  | CSeq of cmd * cmd
-  | CIf of bexpr * cmd * cmd
-  | CWhile of bexpr * cmd
+    type exp = D.expr
 
-type vardecl = 
-  | VarDeclI of var
-  | VarDeclB of var
+    type cmd = 
+      | CSkip
+      | CAssign of var * exp
+      | CAssume of bexpr
+      | CSeq of cmd * cmd
+      | CIf of bexpr * cmd * cmd
+      | CWhile of bexpr * cmd
 
-type thread = 
-  | Thread of string * vardecl list * cmd
+    type vardecl = var * string Bddapron.Env.typ
+
+
+    type thread = 
+      | Thread of string * vardecl list * cmd
+end

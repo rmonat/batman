@@ -15,17 +15,18 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)
-
-(* The file parses the arguments given to the program, the files, and
-   gives everything to analyzer.ml *)
-open Abs
+(* Copyright (C) Raphaël Monat 2015.                                       *)open Abs
+open Eval
 open Analyzer
 open Lexing
+open Type_prog
+open Bddapron_domain
 
-module PolyAnalyzer = Analyzer.Iterator(Apron_domain.PolkaDomain)
-module OctAnalyzer = Analyzer.Iterator(Apron_domain.OctagonDomain)
-module PplAnalyzer = Analyzer.Iterator(Apron_domain.PplDomain)
+module PolyAnalyzer = Analyzer.Iterator(Bddapron_domain.PolkaDomain)
+module OctAnalyzer = Analyzer.Iterator(Bddapron_domain.OctagonDomain)
+module PplAnalyzer = Analyzer.Iterator(Bddapron_domain.PplDomain)
+
+module Typrog = TypeProg(Bddapron_domain.PolkaDomain)
 
 let string_of_position p =
   Printf.sprintf "%s:%i:%i" p.pos_fname p.pos_lnum (p.pos_cnum - p.pos_bol)
@@ -76,6 +77,8 @@ let parse_file filename =
 
 let calc () =
   let logi, logfp, logd, logg, wis, wds, winterfstep, waff, filename = parse_args () in
-  let prog = parse_file filename in PolyAnalyzer.global_analysis prog (logi, logfp, logd, logg, wis, wds, winterfstep, waff)
+  let iprog = parse_file filename in 
+  let prog, env = Typrog.extract_prog iprog in
+  PolyAnalyzer.global_analysis prog env (logi, logfp, logd, logg, wis, wds, winterfstep, waff)
 
 let _ = calc ()
