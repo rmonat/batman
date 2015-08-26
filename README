@@ -14,7 +14,7 @@ Ocamlbuild
 
 Easiest way to install: use OPAM, 
 
-	opam init --comp 4.0.2
+	opam init --comp 4.02.1
 	opam install apron
 
 A VM will be available soon.
