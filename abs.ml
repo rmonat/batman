@@ -15,7 +15,8 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)open Lexing
+(* Copyright (C) Raphaël Monat 2015.                                       *)
+open Lexing
 open Bdddomain
 
 
@@ -28,14 +29,18 @@ module Abs(D:BDD_ABSTRACT_DOMAIN) =
     type bexpr = D.bool_expr
 
     type exp = D.expr
+    
+    (*type lab = D.label*)
+    type lab = int
+
 
     type cmd = 
       | CSkip
-      | CAssign of var * exp
-      | CAssume of bexpr
+      | CAssign of lab * lab * var * exp
+      | CAssume of lab * lab * bexpr
       | CSeq of cmd * cmd
-      | CIf of bexpr * cmd * cmd
-      | CWhile of bexpr * cmd
+      | CIf of lab * lab * bexpr * cmd * cmd
+      | CWhile of lab * lab * bexpr * cmd
 
     type vardecl = var * string Bddapron.Env.typ
 

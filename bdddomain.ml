@@ -27,6 +27,7 @@ module type BDD_ABSTRACT_DOMAIN = sig
   type apron_expr (* string Bddapron.Expr1.Apron.t*)
   type bool_expr (* string bddapon.Expr1.Bool.t*)
   type expr
+  type label (* Bddapron.Expr1.Bint.t || int ?*)
 
 (*  val apron : Param.lib Apron.Manager.t*)
 (*  val man : ('a, Param.lib) Bddapron.Mtbdddomain0.man*)

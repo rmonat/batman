@@ -15,7 +15,8 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)open Bdddomain
+(* Copyright (C) Raphaël Monat 2015.                                       *)
+open Bdddomain
 open Bddapron
 open Apron
 
@@ -35,6 +36,7 @@ module BDDAPRON_DOMAIN(Param: BDDAPRON_PARAM) =
     type apron_expr = string Bddapron.Expr1.Apron.t
     type bool_expr = string Bddapron.Expr1.Bool.t
     type expr = string Bddapron.Expr1.t
+    type label = int
 
     let init () = 
       Cudd.Man.print_limit := 200; 

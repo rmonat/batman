@@ -202,21 +202,21 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
         | A.CSkip -> 
           if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%sskip;\n%s%s\n" (tabs ()) (tabs ()) (sprint_domain_only thread_domain)); 
           interf_t, thread_domain
-        | A.CAssign (v, e) -> (* là c'est la partie pénible, il faut faire attention aux interférences etc etc *)
+        | A.CAssign (l, l',v, e) -> (* là c'est la partie pénible, il faut faire attention aux interférences etc etc *)
           (*          Printf.printf "CAssign %s\n" v;*)
           let (i, d) = (calc_interf thread_domain v e interf_t), (calc_assign v e t_id thread_domain union) 
           in
-          if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s%s = %s;\n%s%s\n" (tabs ()) v (sprint_exp e) (tabs ()) (sprint_domain_only d));
+          if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d]%s = %s;[%d]\n%s%s\n" (tabs ()) l v (sprint_exp e) l' (tabs ()) (sprint_domain_only d));
           i, d
-        | A.CAssume e -> 
+        | A.CAssume (l, l', e) -> 
           let r1, _, _ = D.filter thread_domain e in 
           let r = apply_all r1 t_id union in
-          if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%sassume %s\n%s%s\n" (tabs ()) (sprint_bexpr e) (tabs ()) (sprint_domain_only r)); 
+          if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d]assume %s[%d]\n%s%s\n" (tabs ()) l (sprint_bexpr e) l' (tabs ()) (sprint_domain_only r)); 
           interf_t, r
         | A.CSeq (c1, c2) -> let i, d = analyze c1 t_id interferences thread_domain ann_prog analysis lincons in
           if (!log_domains) then Format.printf "NEW SEQ@.@.";
           analyze c2 t_id (union, i) d ann_prog analysis lincons
-        | A.CIf (b, t, f) -> 
+        | A.CIf (l, l', b, t, f) -> 
           (* if (Texpr1.is_interval_linear (Tcons1.get_texpr1 (fst (D.tcons_of_bexpr (D.getenv thread_domain) b)))) then  *)
           (*   Format.printf "La condition booléenne %s est linéaire@." (sprint_bexpr b) *)
           (* else Format.printf "La condition booléenne %s n'est PAS linéaire@." (sprint_bexpr b); *)
@@ -227,7 +227,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
 (*          let interf_true, interf_false, err = D.filter interf_t b in*)
           if (ann_prog) then
             (
-              analysis := !analysis ^ (Format.sprintf "%sif %s then\n"  (tabs ()) (sprint_bexpr b));
+              analysis := !analysis ^ (Format.sprintf "%s[%d]if %s then\n"  (tabs ()) l (sprint_bexpr b));
               open_indent ()
             );
           let int_true, dom_true = analyze t t_id (union, interf_t) t_domain ann_prog analysis lincons in
@@ -241,7 +241,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           if (ann_prog) then
             (
               close_indent ();
-              analysis := !analysis ^ (Format.sprintf "%sendif;\n" (tabs ()));
+              analysis := !analysis ^ (Format.sprintf "%sendif;[%d]\n" (tabs ()) l');
             );
           if(!log_domains) then
             (
@@ -250,7 +250,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
               print_domain (D.join dom_true dom_false) "Join" "";
             );
           (D.join interf_t (D.join int_true int_false)), (D.join dom_true dom_false)
-        | A.CWhile (b, c) -> if (!log_domains) then Format.printf "CWhile\n"; 
+        | A.CWhile (l, l', b, c) -> if (!log_domains) then Format.printf "CWhile\n"; 
           let in_domain_, out_domain, _ = D.filter thread_domain b in
           let in_domain = apply_all in_domain_ t_id union in
           (* print_domain in_domain_ "in_domain_ " ""; *)
@@ -258,7 +258,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           (*let in_intf, out_intf = interf_t, interf_t in (* TODO : filtrer les interférences ? ça n'a aucun sens ?!*)*)
           if (ann_prog) then
             (
-              analysis := !analysis ^ (Format.sprintf "%swhile %s do\n" (tabs ()) (sprint_bexpr b));
+              analysis := !analysis ^ (Format.sprintf "%s[%d]while %s do\n" (tabs ()) l (sprint_bexpr b));
               open_indent ();
             );
           let s = ref "" in
@@ -274,7 +274,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           if (ann_prog) then
             (
               close_indent ();
-              analysis := !analysis ^ (Format.sprintf "%s%sdone;\t%s\n" !s (tabs ()) (sprint_domain_only d));
+              analysis := !analysis ^ (Format.sprintf "%s%sdone;[%d]\t%s\n" !s (tabs ()) l' (sprint_domain_only d));
             );
           let (_, r2, _) =  (D.filter d b)
           in (D.join i interf_t, D.join r2 out_domain) (* TODO : filtrer d ou pas ?*)
@@ -366,11 +366,11 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
       let search_lincons init_domain prog = 
         let rec search p acc = 
           match p with
-          | A.CIf (b, ct, cf) -> 
+          | A.CIf (l, l', b, ct, cf) -> 
             let _, d, _ = D.filter init_domain b in
             search ct (search cf (d::acc))
           | A.CSeq (c1, c2) -> search c2 (search c1 acc) 
-          | A.CWhile (b, c) -> search c acc
+          | A.CWhile (l, l', b, c) -> search c acc
           | _ -> acc
         in
         let dom_array = Array.of_list (search prog []) in

@@ -69,7 +69,8 @@ rule lexer = parse
 | ";" { T_SEMICOLON}
 | "=" { T_EQUAL }
 | "begin" { T_BEGIN }
-| "end" { T_END}
+| "end" { T_END }
+| "@"{ T_LABEL }
 | ['_''a'-'z' 'A'-'Z'] ['_''a'-'z' 'A'-'Z' '0'-'9']*
   { T_id (Lexing.lexeme lexbuf) }
 | '-'?['0'-'9']+

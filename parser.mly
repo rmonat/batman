@@ -15,9 +15,12 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)%{
+(* Copyright (C) Raphaël Monat 2015.                                       *)
+%{
   open Abs_init
 %}
+
+%token T_LABEL
 
 %token T_INIT
 %token T_THREAD
@@ -124,12 +127,20 @@ commande :
 | c = cmd2 T_SEMICOLON {c}
 
 cmd2 :
-| T_ASSUME b = exp { ICAssume b}
+| T_ASSUME b = exp { ICAssume (false, b)}
+| T_LABEL T_ASSUME b = exp { ICAssume (true, b)}
 | T_SKIP { ICSkip }
-| v = T_id T_EQUAL e = exp { ICAssign (v, e); }
-| T_IF b = exp T_THEN c1 = cmd T_ENDIF {ICIf(b, c1, ICSkip)}
-| T_IF b = exp T_THEN c1 = cmd T_ELSE c2 = cmd T_ENDIF {ICIf(b, c1, c2)}
-| T_WHILE b = exp T_DO c = cmd T_DONE {ICWhile(b, c)}
+| v = T_id T_EQUAL e = exp { ICAssign (false, v, e); }
+| T_LABEL v = T_id T_EQUAL e = exp { ICAssign (true, v, e); }
+
+| T_IF b = exp T_THEN c1 = cmd T_ENDIF {ICIf(false, b, c1, ICSkip)}
+| T_LABEL T_IF b = exp T_THEN c1 = cmd T_ENDIF {ICIf (true, b, c1, ICSkip)}
+
+| T_IF b = exp T_THEN c1 = cmd T_ELSE c2 = cmd T_ENDIF {ICIf(false, b, c1, c2)}
+| T_LABEL T_IF b = exp T_THEN c1 = cmd T_ELSE c2 = cmd T_ENDIF {ICIf(true, b, c1, c2)}
+
+| T_WHILE b = exp T_DO c = cmd T_DONE {ICWhile(false, b, c)}
+| T_LABEL T_WHILE b = exp T_DO c = cmd T_DONE {ICWhile(true, b, c)}
 
 prog :
 | T_VAR v = vardecll T_INIT b = exp T_SEMICOLON p = prog2 { (p, v, b) }

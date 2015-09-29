@@ -15,7 +15,9 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)open Abs
+(* Copyright (C) Raphaël Monat 2015.                                       *)
+
+open Abs
 open Abs_init
 open Sys
 open Bddapron
@@ -55,11 +57,11 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
         else failwith ("in extract_aexpr env bad type of " ^ v)
       | IAInt i -> D.apron_cst env (Apron.Coeff.s_of_int i)
       | IARand (x, y) -> D.apron_int env x y
-      | IAPlus (x, y) -> D.apron_add (extract_aexpr env i b  x) (extract_aexpr env i b  y)
-      | IAMinus (x, y) -> D.apron_sub (extract_aexpr env i b  x) (extract_aexpr env i b  y)
-      | IATimes (x, y) -> D.apron_mul (extract_aexpr env i b  x) (extract_aexpr env i b  y)
-      | IADivided (x, y) -> D.apron_div (extract_aexpr env i b  x) (extract_aexpr env i b  y)
-      | IAPercent (x, y) -> D.apron_gmod (extract_aexpr env i b  x) (extract_aexpr env i b  y)
+      | IAPlus (x, y) -> D.apron_add (extract_aexpr env i b x) (extract_aexpr env i b y)
+      | IAMinus (x, y) -> D.apron_sub (extract_aexpr env i b x) (extract_aexpr env i b y)
+      | IATimes (x, y) -> D.apron_mul (extract_aexpr env i b x) (extract_aexpr env i b y)
+      | IADivided (x, y) -> D.apron_div (extract_aexpr env i b x) (extract_aexpr env i b y)
+      | IAPercent (x, y) -> D.apron_gmod (extract_aexpr env i b x) (extract_aexpr env i b y)
       | IANeg x -> D.apron_neg (extract_aexpr env i b  x)
       | _ -> failwith "not purely arithmetical expression [extract_aexpr]"
 
@@ -71,28 +73,48 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
       | IBor (x, y) -> D.bool_or (extract_bexpr env i b x) (extract_bexpr env i b y)
       | IBNot x -> D.bool_not (extract_bexpr env i b x)
       | IBequal (x, y) -> 
-        (try D.apron_eq (extract_aexpr env i b  (IAMinus (x, y))) 
+        (try D.apron_eq (extract_aexpr env i b (IAMinus (x, y))) 
         with _ -> D.bool_eq (extract_bexpr env i b x) (extract_bexpr env i b y))
 
-      | IBlesse (x, y) -> D.apron_supeq (extract_aexpr env i b  (IAMinus(y, x))) (*x <= y <==> y-x >= 0*)
-      | IBless (x, y) -> D.apron_sup (extract_aexpr env i b  (IAMinus(y, x)))
-      | IBgreater (x, y) -> D.apron_sup  (extract_aexpr env i b  (IAMinus(y, x)))
+      | IBlesse (x, y) -> D.apron_supeq (extract_aexpr env i b (IAMinus(y, x))) (*x <= y <==> y-x >= 0*)
+      | IBless (x, y) -> D.apron_sup (extract_aexpr env i b (IAMinus(y, x)))
+      | IBgreater (x, y) -> D.apron_sup  (extract_aexpr env i b (IAMinus(y, x)))
       | IBgreatere (x, y) -> D.apron_supeq  (extract_aexpr env i b (IAMinus(y, x)))
       | IBTrue -> D.bool_true env
       | IBFalse -> D.bool_false env
       | _ -> failwith "not purely boolean expression [extract_bexpr env]"
 
+    let label_count = ref 0;;
+
     let rec extract_cmd env i b c = match c with
       | ICSkip -> A.CSkip
-      | ICAssign (v, e) -> 
+
+      | ICAssign (bl, v, e) -> 
+        let nextlabel = if bl then (!label_count)+1 else !label_count in
         if (List.mem v i) then
-          A.CAssign  (v, (D.apron_expr (extract_aexpr env i b e)))
+          A.CAssign  (!(label_count), nextlabel, v, (D.apron_expr (extract_aexpr env i b e)))
         else
-          A.CAssign (v, (D.bool_expr (extract_bexpr env i b e)))
-      | ICAssume iexp -> A.CAssume (extract_bexpr env i b iexp)
-      | ICSeq (c1, c2) -> A.CSeq ((extract_cmd env i b c1), (extract_cmd env i b c2))
-      | ICIf (iexp, t, f) -> A.CIf ((extract_bexpr env i b iexp), (extract_cmd env i b t), (extract_cmd env i b f))
-      | ICWhile (iexp, c) -> A.CWhile ((extract_bexpr env i b iexp), (extract_cmd env i b c))
+          A.CAssign (!(label_count), nextlabel, v, (D.bool_expr (extract_bexpr env i b e)))
+
+      | ICAssume (bl, iexp) -> 
+        let nextlabel = if bl then (!label_count)+1 else !label_count in
+        A.CAssume (!(label_count), nextlabel, (extract_bexpr env i b iexp))
+
+      | ICSeq (c1, c2) -> 
+        let r1 = (extract_cmd env i b c1) in A.CSeq (r1, (extract_cmd env i b c2))
+
+      | ICIf (bl, iexp, t, f) -> 
+        let lab = !label_count in
+        let rt = (extract_cmd env i b t) in
+        let rf = (extract_cmd env i b f) in
+        let nextlabel = if bl then (!label_count)+1 else !label_count in
+        A.CIf (lab, nextlabel, (extract_bexpr env i b iexp), rt, rf)
+
+      | ICWhile (bl, iexp, c) ->
+        let lab = !label_count in
+        let r = extract_cmd env i b c in
+        let nextlabel = if bl then (!label_count)+1 else !label_count in
+        A.CWhile (lab, nextlabel, (extract_bexpr env i b iexp), r)
 
     let transform_varlist i b = 
       (List.map (fun x -> (x, `Int)) i)@(List.map (fun x -> (x, `Bool)) b)
