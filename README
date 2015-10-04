@@ -1,7 +1,22 @@
+DISCLAIMER: This is a *prototype*. The code might be *not clean*
+
 This is the code a of BAsic Thread-Modular ANalyzer. It uses Abstract
 Interpretation, and uses Ocaml, Apron/Bddapron, and was created during
 an 8 weeks long Bachelor internship under the supervision of Antoine
-Miné, in the ANTIQUE team, at the ENS Ulm. This code is (c) Raphaël
-Monat 2015, et is distributed under a GPLv3 licence. For more
-information on this project, please consult my internship report: [NOT
-AVAILABLE YET]
+Miné, in the ANTIQUE team, at the ENS Ulm. 
+
+This code is (c) Raphaël Monat 2015, and is distributed under a GPLv3 licence.
+
+For more information on this project, please consult my internship
+report: rmonat.fr/batman/report.pdf
+
+== Dependencies ==
+Apron or bddapron, depending on the branch.
+Ocamlbuild
+
+Easiest way to install: use OPAM, 
+
+	opam init --comp 4.02.1
+	opam install apron
+
+A VM is available at rmonat.fr/batman.html

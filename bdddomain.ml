@@ -26,6 +26,7 @@ module type BDD_ABSTRACT_DOMAIN = sig
   type env (* = 'a Bddapron.Env.t (ou string ?)*)
   type apron_expr (* string Bddapron.Expr1.Apron.t*)
   type bool_expr (* string bddapon.Expr1.Bool.t*)
+  type bint_expr
   type expr
   type label (* Bddapron.Expr1.Bint.t || int ?*)
 
@@ -38,6 +39,9 @@ module type BDD_ABSTRACT_DOMAIN = sig
   val mkenv : unit -> env 
   val empty : unit -> domain
   val top : env -> domain
+
+  val bint_cst : env -> int -> int -> bint_expr
+  val bint_expr : bint_expr -> expr
 
   val apron_cst : env -> Apron.Coeff.t -> apron_expr
   val apron_int : env -> int -> int -> apron_expr

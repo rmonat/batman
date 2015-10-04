@@ -1,4 +1,4 @@
-(* This file is part of the Batman analyzer, released under GPLv3          *)
+1(* This file is part of the Batman analyzer, released under GPLv3          *)
 (* license. Please read the COPYING file packaged in the distribution.     *)
 (*                                                                         *)
 (* The Batman analyzer is free software: you can redistribute it and/or    *)
@@ -15,7 +15,9 @@
 (* along with this Batman analyzer.  If not, see                           *)
 (* <http://www.gnu.org/licenses/>                                          *)
 (*                                                                         *)
-(* Copyright (C) Raphaël Monat 2015.                                       *)(*TODO
+(* Copyright (C) Raphaël Monat 2015.                                       *)
+
+(*TODO
 - changer les perint. Verifier interférences avec booléens. Changer la partie sur les dimensions : à la place, garder les variables et les variables' qui de toute façon ne changent en fait pas au fil du temps
 
 - Itération décroissante pour les interférences
@@ -50,6 +52,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
 
     let newvars = ref []
     let toremove = ref []
+    let threadname = ref [||]
 
     let sprint_aexpr a = D.apron_print Format.str_formatter a; Format.flush_str_formatter ();;
     let sprint_bexpr b = D.bool_print Format.str_formatter b; Format.flush_str_formatter ();;
@@ -92,22 +95,22 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
       if(!log_i) then Format.printf "\t\tApply_all interferences on thread%d\n" n_curr_th;
       (* TODO : c'est correct de faire ça ? 
          Refactoriser certaines parties *)
-      let apply_decrease domaini n_curr_th interf_tab =
-        let res = ref (D.bot (D.getenv domaini)) in
-        for x = 0 to (Array.length interf_tab)-1 do
-          if (x <> n_curr_th) then
-            (
-              let tmp = D.del_vars interf_tab.(x) !toremove in
-              let tmp2 = D.ren_vars tmp !newvars !toremove in
-              res := D.join !res (D.meet tmp2 domaini);
-            )
-        done;
-        if(!log_i) then 
-          (
-            print_domain !res ("\t\tApply_decrease interferences on thread " ^ (string_of_int n_curr_th)) "";
-          );
-        !res
-      in
+      (* let apply_decrease domaini n_curr_th interf_tab = *)
+      (*   let res = ref (D.bot (D.getenv domaini)) in *)
+      (*   for x = 0 to (Array.length interf_tab)-1 do *)
+      (*     if (x <> n_curr_th) then *)
+      (*       ( *)
+      (*         let tmp = D.del_vars interf_tab.(x) !toremove in *)
+      (*         let tmp2 = D.ren_vars tmp !newvars !toremove in *)
+      (*         res := D.join !res (D.meet tmp2 domaini); *)
+      (*       ) *)
+      (*   done; *)
+      (*   if(!log_i) then  *)
+      (*     ( *)
+      (*       print_domain !res ("\t\tApply_decrease interferences on thread " ^ (string_of_int n_curr_th)) ""; *)
+      (*     ); *)
+      (*   !res *)
+      (* in *)
       let apply_interf_one domaini ith interf_tab =
         if(!log_i) then Format.printf "\t\tInterf_one with thread %d\n" ith;
         (* On veut commencer par doubler la dimension de domain *)
@@ -120,6 +123,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
         let domain2 = D.meet domain2 interf_tab.(ith) in (** on veut faire domain2 = domain2 inter interf_tab[ith]. Bon ordre des domaines ?*)
         if (!log_i) then print_domain domain2 "\n\tDomain2 after meet :" "";
         let domain3 = D.del_vars domain2 !toremove in
+        if (!log_i) then print_domain domain3 "\n\tDomain3" "";
         let domain4 = (D.ren_vars domain3 !newvars !toremove) in
         if (!log_i) then print_domain domain4 "\n\tDomain4" "\n";
         domain4;
@@ -161,13 +165,13 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
 
     (** Calcule le nouveau domaine que peut prendre domain après qu'on ait fait v <- e dans le thread nth sachant que les autres threads peuvent interférer au niveau de interf_tab *)
     (** lui passer man et env ? ou env se trouve dans domaine -> Abstract1.env ??*)
-    let calc_assign v e nth domain interf_tab = 
+    let calc_assign v e nth domain interf_tab id labi labf labmax = 
       if(!log_i) then Format.printf "\t\tCalc_assign (thread %d, var %s)\n" nth v;
       let d2, d2err = D.assign domain v e in
       apply_all d2 nth interf_tab
 
 
-    let calc_interf pre_assign v e interf_t = 
+    let calc_interf pre_assign v e interf_t id labi labf labmax = 
       if (!log_i) then 
         (
           Format.printf "\t\tCalc_interf of var %s@." v;
@@ -181,6 +185,9 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
       (*     D.assign_with dom2 (Var.to_string newvars.(i)) (AVar (Var.to_string (D.var_of_dim pre_assign i))); *)
       (* done; *)
       List.iter (fun x -> if ((fst x) <> v) then dom2 := fst (D.assign !dom2 ((fst x)^"'") (D.expr_var (D.getenv !dom2) (fst x)))) !toremove;
+      let auxname = "_aux_"^(!threadname.(id)) in
+      dom2 := fst (D.assign !dom2 (auxname^"'") (D.bint_expr (D.bint_cst (D.getenv !dom2) labmax labf)));
+      dom2 := fst (D.assign !dom2 (auxname) (D.bint_expr (D.bint_cst (D.getenv !dom2) labmax labi)));
       let dom3 = D.join interf_t !dom2 in
       (*let dom5, _, _ = D.filter dom3 (BNot (Bequal ((AVar v), (AVar (v ^ "'"))))) in (* et là on veut l'expression y = y' car on prend la négation sur le filter car après pbs d'implémentations*) *)
       if (!log_i) then print_domain dom3 "\t\tdom3 (calc_interf) = " "";
@@ -193,9 +200,24 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           @param t_id : le numéro du thread en question dans le tableau des interférences
           @param interferences : le tableau des interférences * les interférences locales
           @param thread_domain : le domaine du thread en question
+          @param ann_prog : un booléen qui si vrai annote le programme par son analyse
+          @param analysis : la chaine de caractère qui garde l'annotation du programme si ann_prog
+          @param lincons : les contraintes détectées automatiquement pour le widening avec threshold
+          @param nb_lab : nombre de labels pour t_id OU on fait un tableau
           @return les nouvelles interférences * le domaine du thread ?
       *)
-      let rec analyze th t_id interferences thread_domain ann_prog analysis lincons = 
+
+
+    (* A MODIFIER : 
+       Ajouter les variables _aux_... Ok normalement ?
+       Eventuellement faire attention au début du domaine ? (ou pour le thread 1 pas ajouter les _aux_autres)
+       Quand on crée une interférence, bien mettre _aux_(t_id) (ou le nom du thread ?) _aux_(t_id)' 
+       Pour calc interf : rajouter le changement l->l' pour _aux_(threadname.(t_id))
+       Pour calc assign : appliquer le changement [v -> e] pour _aux_(...) = l'
+
+       Quand on applique les interférences ?       
+    *)
+      let rec analyze th t_id interferences thread_domain ann_prog analysis lincons nb_lab = 
         (* prendre le thread (-,-,-) ou juste la cmd comme on fait pour le moment ? *)
         let (union, interf_t) = interferences in
         match th with
@@ -204,18 +226,18 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           interf_t, thread_domain
         | A.CAssign (l, l',v, e) -> (* là c'est la partie pénible, il faut faire attention aux interférences etc etc *)
           (*          Printf.printf "CAssign %s\n" v;*)
-          let (i, d) = (calc_interf thread_domain v e interf_t), (calc_assign v e t_id thread_domain union) 
+          let (i, d) = (calc_interf thread_domain v e interf_t t_id l l' nb_lab), (calc_assign v e t_id thread_domain union t_id l l' nb_lab) 
           in
-          if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d]%s = %s;[%d]\n%s%s\n" (tabs ()) l v (sprint_exp e) l' (tabs ()) (sprint_domain_only d));
+          if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d/%d]%s = %s;[%d/%d]\n%s%s\n" (tabs ()) l nb_lab v (sprint_exp e) l' nb_lab (tabs ()) (sprint_domain_only d));
           i, d
         | A.CAssume (l, l', e) -> 
           let r1, _, _ = D.filter thread_domain e in 
           let r = apply_all r1 t_id union in
           if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d]assume %s[%d]\n%s%s\n" (tabs ()) l (sprint_bexpr e) l' (tabs ()) (sprint_domain_only r)); 
           interf_t, r
-        | A.CSeq (c1, c2) -> let i, d = analyze c1 t_id interferences thread_domain ann_prog analysis lincons in
+        | A.CSeq (c1, c2) -> let i, d = analyze c1 t_id interferences thread_domain ann_prog analysis lincons nb_lab in
           if (!log_domains) then Format.printf "NEW SEQ@.@.";
-          analyze c2 t_id (union, i) d ann_prog analysis lincons
+          analyze c2 t_id (union, i) d ann_prog analysis lincons nb_lab
         | A.CIf (l, l', b, t, f) -> 
           (* if (Texpr1.is_interval_linear (Tcons1.get_texpr1 (fst (D.tcons_of_bexpr (D.getenv thread_domain) b)))) then  *)
           (*   Format.printf "La condition booléenne %s est linéaire@." (sprint_bexpr b) *)
@@ -230,14 +252,14 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
               analysis := !analysis ^ (Format.sprintf "%s[%d]if %s then\n"  (tabs ()) l (sprint_bexpr b));
               open_indent ()
             );
-          let int_true, dom_true = analyze t t_id (union, interf_t) t_domain ann_prog analysis lincons in
+          let int_true, dom_true = analyze t t_id (union, interf_t) t_domain ann_prog analysis lincons nb_lab in
           if (ann_prog) then
             (
               close_indent ();
               analysis := !analysis ^ (Format.sprintf "%selse\n" (tabs ()));
               open_indent ();
             );
-          let int_false, dom_false = analyze f t_id (union, interf_t) f_domain ann_prog analysis lincons in (* danger sur les interferences ? clairement. Comment gérer ça ?*)
+          let int_false, dom_false = analyze f t_id (union, interf_t) f_domain ann_prog analysis lincons nb_lab in (* danger sur les interferences ? clairement. Comment gérer ça ?*)
           if (ann_prog) then
             (
               close_indent ();
@@ -266,7 +288,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
               (fun int dom annp analys -> 
                  let domain_in_, _, _ = D.filter dom b in 
                  let domain_in = apply_all domain_in_ t_id union in
-                 let (i, d) = (analyze c t_id (union, int) domain_in annp analys lincons) in
+                 let (i, d) = (analyze c t_id (union, int) domain_in annp analys lincons nb_lab) in
                  (* print_domain dom "(anonymousfun)dom : " ""; *)
                  (* print_domain domain_in "(anonymousfun)domain_in : " ""; *)
                  (* print_domain d "(anonymousfun)d" ""; *)
@@ -405,10 +427,16 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
       widening_interf_step := winterfstep;
       widening_interf_aff_step := waff;
       (* il va falloir créer le tableau des interférences, le tableau des domaines et voilà *)
-      newvars := List.map (fun (x,y) -> (x^"'", y)) glob_vars;
-      toremove := glob_vars;
+(*      label_vars := List.map (fun x -> let A.Thread(i,_,l,_) = x in ("_aux_"^i, `Bint(false, l))) threads; *)
+      newvars := List.map (fun (x,y) -> (x^"'", y)) (glob_vars);(*@(!label_vars));*)
+      List.iter (fun (x, y) -> Format.fprintf Format.std_formatter "%s " x) (!newvars);
+      (* ajouter les _aux_??? de type `Bint (false, log2(vmax))*)
+      toremove := glob_vars;(*@(!label_vars);*)
+      List.iter (fun (x, y) -> Format.fprintf Format.std_formatter "%s " x) (!toremove);
       let realthreads = Array.of_list threads in
-      let realprog = Array.map (fun x -> let A.Thread (_,_,c) = x in c) realthreads in
+      let realprog = Array.map (fun x -> let A.Thread (_,_,_,c) = x in c) realthreads in
+      let maxlab = Array.map (fun x -> let A.Thread (_, _, l, _) = x in l) realthreads in
+      threadname := Array.map (fun x -> let A.Thread(n, _, _, _) = x in n) realthreads;
       let nbprogs = Array.length realthreads in
       let interf = Array.make nbprogs (D.top env) in
       let domains = Array.make nbprogs (D.top env) in
@@ -453,7 +481,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
         if(!log_global) then Format.printf "@.Analyze_onestep, stepn = %d\n" stepn;
         let newidomains = Array.make nbprogs (D.bot (D.getenv interf.(0))) in
         for x = 0 to nbprogs-1 do
-          let A.Thread (id, _, _) = realthreads.(x) in 
+          let A.Thread (id, _, _, _) = realthreads.(x) in 
           idomains.(x) <- apply_all (init_domains.(x)) x interf;
           
           if(!log_global || !log_i) then Format.fprintf Format.std_formatter "@.\tAnalysing thread %d (ie %s)@." x id;
@@ -464,7 +492,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
             );
           let s = ref "" in
           (*Format.printf "%s\n" (sprint_domain_only idomains.(x));*)
-          let (i, d) = analyze realprog.(x) x (interf, interf.(x)) idomains.(x) false s lincons.(x) in
+          let (i, d) = analyze realprog.(x) x (interf, interf.(x)) idomains.(x) false s lincons.(x) maxlab.(x) in
           (*Format.printf "%s\n\n" !s;*)
           if (stepn < !widening_interf_step) then
             newidomains.(x) <- i
@@ -492,13 +520,13 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
       Format.printf "@.Analysis completed in %d steps\n" !n;
       let s = ref "" in
       for x = 0 to nbprogs-1 do
-        let A.Thread (id, _, _) = realthreads.(x) in 
+        let A.Thread (id, _, _, _) = realthreads.(x) in 
         s := !s ^ Format.sprintf "thread %s:\nbegin\n" id;
         open_indent ();
         idomains.(x) <- apply_all (init_domains.(x)) x interf;
         if(!log_global || !log_i) then Format.fprintf Format.std_formatter "@.\tAnalysing thread %d (ie %s)@." x id;
         s := !s ^ Format.sprintf "%s%s\n" (tabs ()) (sprint_domain_only idomains.(x));
-        let _ = analyze realprog.(x) x (interf, interf.(x)) (idomains.(x)) true s lincons.(x) in
+        let useless = analyze realprog.(x) x (interf, interf.(x)) (idomains.(x)) true s lincons.(x) maxlab.(x) in
         s := !s ^ Format.sprintf "end\n\n";
         close_indent ();
       done;

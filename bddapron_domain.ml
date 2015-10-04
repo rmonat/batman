@@ -35,6 +35,7 @@ module BDDAPRON_DOMAIN(Param: BDDAPRON_PARAM) =
     type env = string Bddapron.Env.t
     type apron_expr = string Bddapron.Expr1.Apron.t
     type bool_expr = string Bddapron.Expr1.Bool.t
+    type bint_expr = string Bddapron.Expr1.Bint.t
     type expr = string Bddapron.Expr1.t
     type label = int
 
@@ -54,6 +55,9 @@ module BDDAPRON_DOMAIN(Param: BDDAPRON_PARAM) =
 
     let top env = Mtbdddomain1.top man env
     let bot env = Mtbdddomain1.bottom man env
+
+    let bint_cst env vmax v = Expr1.Bint.of_int env cond (`Bint (false, vmax)) v
+    let bint_expr e = Expr1.Bint.to_expr e
 
     let apron_cst env v = Expr1.Apron.cst env cond v
     let apron_int env a b = failwith "intervals not implemented in bddapron..."
@@ -140,6 +144,7 @@ module BDDAPRON_DOMAIN(Param: BDDAPRON_PARAM) =
 
     let del_vars (dom:domain) vars =
       let env = Mtbdddomain1.get_env dom in
+      (*Bddapron.Env.print Format.std_formatter env;*)
       let env = Env.remove_vars env (List.map (fun (x, y) -> x) vars) in
       Mtbdddomain1.change_environment man dom env
 

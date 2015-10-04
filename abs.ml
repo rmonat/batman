@@ -33,6 +33,7 @@ module Abs(D:BDD_ABSTRACT_DOMAIN) =
     (*type lab = D.label*)
     type lab = int
 
+    type maxlab = int
 
     type cmd = 
       | CSkip
@@ -46,5 +47,5 @@ module Abs(D:BDD_ABSTRACT_DOMAIN) =
 
 
     type thread = 
-      | Thread of string * vardecl list * cmd
+      | Thread of string * vardecl list * maxlab * cmd
 end

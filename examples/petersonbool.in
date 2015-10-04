@@ -7,7 +7,8 @@ begin
   flag0 = true;
   turn = 1;
   assume not (flag1 and turn == 1);
-  flag0 = false;
+@ x = 8;
+@  flag0 = false;
   x = 0;
 end
 
@@ -17,5 +18,6 @@ begin
   flag1 = true;
   turn = 0;
   assume not (flag0 and turn == 0);
-  flag1 = false;
+@ x = 0;
+@  flag1 = false;
 end

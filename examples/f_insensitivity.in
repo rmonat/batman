@@ -2,12 +2,13 @@ var x:int;
 
 initial x == 0;
 
-thread a:
-begin
-  x = x + 1;
-end
-
 thread b:
 begin
-  x = x + 1;
+@  x = x + 1;
+end
+
+
+thread a:
+begin
+@  x = x + 1;
 end

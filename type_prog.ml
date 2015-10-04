@@ -90,15 +90,17 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
       | ICSkip -> A.CSkip
 
       | ICAssign (bl, v, e) -> 
-        let nextlabel = if bl then (!label_count)+1 else !label_count in
+        let lab = !label_count in
+        let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
         if (List.mem v i) then
-          A.CAssign  (!(label_count), nextlabel, v, (D.apron_expr (extract_aexpr env i b e)))
+          A.CAssign  (lab, nextlabel, v, (D.apron_expr (extract_aexpr env i b e)))
         else
-          A.CAssign (!(label_count), nextlabel, v, (D.bool_expr (extract_bexpr env i b e)))
+          A.CAssign (lab, nextlabel, v, (D.bool_expr (extract_bexpr env i b e)))
 
       | ICAssume (bl, iexp) -> 
-        let nextlabel = if bl then (!label_count)+1 else !label_count in
-        A.CAssume (!(label_count), nextlabel, (extract_bexpr env i b iexp))
+        let lab = !label_count in
+        let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
+        A.CAssume (lab, nextlabel, (extract_bexpr env i b iexp))
 
       | ICSeq (c1, c2) -> 
         let r1 = (extract_cmd env i b c1) in A.CSeq (r1, (extract_cmd env i b c2))
@@ -107,27 +109,30 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
         let lab = !label_count in
         let rt = (extract_cmd env i b t) in
         let rf = (extract_cmd env i b f) in
-        let nextlabel = if bl then (!label_count)+1 else !label_count in
+        let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
         A.CIf (lab, nextlabel, (extract_bexpr env i b iexp), rt, rf)
 
       | ICWhile (bl, iexp, c) ->
         let lab = !label_count in
         let r = extract_cmd env i b c in
-        let nextlabel = if bl then (!label_count)+1 else !label_count in
+        let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
         A.CWhile (lab, nextlabel, (extract_bexpr env i b iexp), r)
 
     let transform_varlist i b = 
       (List.map (fun x -> (x, `Int)) i)@(List.map (fun x -> (x, `Bool)) b)
 
+    let lmax x = (int_of_float) (ceil ((log (float_of_int (x+1))) /. log 2.));;
+
 
     let extract_prog l = 
       let (ithreads, ivars, iinit) = l in
       let i, b = check_vardecl ivars in
+      let glob_vars = transform_varlist i b in
 
       let env = D.mkenv () in
       D.init ();
       let top = D.top env in 
-      let top = D.add_vars top (transform_varlist i b) in
+      let top = D.add_vars top glob_vars in
       let env = D.getenv top in
 
 
@@ -137,7 +142,14 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
         |t::q -> 
           let IThread (s, v, c) = t in
           let il, bl = check_vardecl v in
-          (A.Thread (s, (transform_varlist il bl), (extract_cmd env i b c)))::(extract_thread q)
+          label_count := 0;
+          let c = extract_cmd env i b c in
+          let lab = lmax (!label_count) in
+          ((A.Thread (s, (transform_varlist il bl), lab, c))::(extract_thread q))
       in
-      ((extract_thread ithreads), (transform_varlist i b), init), env
+      let threads = (extract_thread ithreads) in
+      let label_vars = List.map (fun x -> let A.Thread(i,_,l,_) = x in ("_aux_"^i, `Bint(false, l))) threads in
+      let top = D.add_vars top label_vars in
+      let env = D.getenv top in
+      (threads, (glob_vars@label_vars), init), env
   end
