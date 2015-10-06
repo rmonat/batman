@@ -2,13 +2,13 @@ var x:int;
 
 initial x == 0;
 
-thread b:
+thread a:
 begin
 @  x = x + 1;
 end
 
 
-thread a:
+thread b:
 begin
 @  x = x + 1;
 end

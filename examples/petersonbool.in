@@ -18,6 +18,6 @@ begin
   flag1 = true;
   turn = 0;
   assume not (flag0 and turn == 0);
-@ x = 0;
+@ x = 4;
 @  flag1 = false;
 end
