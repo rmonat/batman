@@ -231,10 +231,11 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           interf_t, thread_domain
         | A.CAssign (l, l', v, e) -> (* là c'est la partie pénible, il faut faire attention aux interférences etc etc *)
           (*          Printf.printf "CAssign %s\n" v;*)
-          let (i, d) = (calc_interf thread_domain v e interf_t t_id l l' nb_lab), (calc_assign v e t_id thread_domain union t_id l l' nb_lab) 
+          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
+          let (i, d) = (calc_interf th_d v e interf_t t_id l l' nb_lab), (calc_assign v e t_id th_d union t_id l l' nb_lab) 
           in
           if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d/%d]%s = %s;[%d/%d]\n%s%s\n" (tabs ()) l nb_lab v (sprint_exp e) l' nb_lab (tabs ()) (sprint_domain_only d));
-          i, (enforce_label d ("_aux_"^(!threadname.(t_id))) l' nb_lab)
+          i, d
         | A.CAssume (l, l', e) -> 
           let r1, _, _ = D.filter thread_domain e in 
           let r = apply_all r1 t_id union in
@@ -477,8 +478,9 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
 
         let initialized, _, _ = D.filter idomains.(x) bexpr_init in
         let initd = ref initialized in
-        for x = 0 to nbprogs-1 do
-          initd := (enforce_label initialized ("_aux_"^(!threadname.(x))) 0 maxlab.(x));
+        for i = 0 to nbprogs-1 do
+          initd := (enforce_label (!initd) ("_aux_"^(!threadname.(i))) 0 maxlab.(i));
+(*          Format.printf "initd, enforcing _aux_%s: %s\n" (!threadname.(i)) (sprint_domain_only (!initd));*)
         done;
         idomains.(x) <- !initd;
         init_domains.(x) <- !initd;
@@ -503,7 +505,6 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
               print_domain interf.(x) "\tOldInterf_t :" "\n";
             );
           let s = ref "" in
-          (*Format.printf "%s\n" (sprint_domain_only idomains.(x));*)
           let (i, d) = analyze realprog.(x) x (interf, interf.(x)) idomains.(x) false s lincons.(x) maxlab.(x) in
           (*Format.printf "%s\n\n" !s;*)
           if (stepn < !widening_interf_step) then

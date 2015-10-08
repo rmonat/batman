@@ -12,3 +12,14 @@ thread b:
 begin
 @  x = x + 1;
 end
+
+thread c:
+begin
+@  x = x + 1;
+end
+
+thread d:
+begin
+@  x = x + 1;
+end
+
