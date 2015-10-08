@@ -17,29 +17,13 @@
 # (*                                                                         *)
 # (* Copyright (C) Raphaël Monat 2015.                                       *)
 
-# OCAMLC = ocamlc.opt
-# OCAMLOPT = ocamlopt.opt
-# OCAMLDEP = ocamldep
-# OCAMLDOC = ocamldoc
-# OCAMLLEX = ocamllex
-# MENHIR = menhir
-
-
-# ZARITHDIR = ~/.opam/4.02.1/lib/zarith
-# APRONDIR = ~/.opam/4.02.1/lib/apron/ 
-# GMPDIR = ~/.opam/4.02.1/lib/gmp/
-
-# OCAMLINC = -I $(ZARITHDIR) -I $(APRONDIR) -I $(GMPDIR)
-# OCAMLLIBS =  gmp.cma apron.cma polkaMPQ.cma octD.cma zarith.cma str.cma unix.cma -cclib "-L$(ZARITHDIR) -L$(APRONDIR) -L$(GMPDIR)"
-# OCAMLOPTLIBS = bigarray.cmxa gmp.cmxa apron.cmxa polkaMPQ.cmxa octD.cmxa zarith.cmxa str.cmxa unix.cmxa -cclib "-L$(ZARITHDIR) -L$(APRONDIR) -L$(GMPDIR)"
-# MENHIRFLAGS = --explain
-
 all: analyzer
 
 analyzer : 
-	ocamlbuild -lflags '-I ~/.opam/4.02.1/lib/ocaml/ unix.cma' -lflags '-I ~/.opam/4.02.1/lib/ocaml/threads/ threads.cma' -cflags '-I ~/.opam/4.02.1/lib/ocaml/' -cflags '-I ~/.opam/4.02.1/lib/ocaml/threads/' -use-ocamlfind -tag thread -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp,bddapron -use-menhir -libs bddapron batman.byte
+	ocamlbuild -use-menhir batman.byte -use-ocamlfind -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp,bddapron,bddapron.bdd,bddapron.bddapron
 
 
 
 bin:
-	ocamlbuild -cflags '-g' -lflags '-g' -lflags '-I ~/.opam/4.02.1/lib/ocaml/' -lflags '-I ~/.opam/4.02.1/lib/ocaml/threads/' -cflags '-I ~/.opam/4.02.1/lib/ocaml/' -cflags '-I ~/.opam/4.02.1/lib/ocaml/threads/' -use-ocamlfind -tag thread -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp -use-menhir batman.native
+	ocamlbuild -use-menhir batman.byte -use-ocamlfind -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp,bddapron,bddapron.bdd,bddapron.bddapron
+
