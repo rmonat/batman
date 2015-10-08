@@ -237,7 +237,8 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d/%d]%s = %s;[%d/%d]\n%s%s\n" (tabs ()) l nb_lab v (sprint_exp e) l' nb_lab (tabs ()) (sprint_domain_only d));
           i, d
         | A.CAssume (l, l', e) -> 
-          let r1, _, _ = D.filter thread_domain e in 
+          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
+          let r1, _, _ = D.filter th_d e in 
           let r = apply_all r1 t_id union in
           if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d]assume %s[%d]\n%s%s\n" (tabs ()) l (sprint_bexpr e) l' (tabs ()) (sprint_domain_only r)); 
           interf_t, r
@@ -249,7 +250,9 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           (* if (Texpr1.is_interval_linear (Tcons1.get_texpr1 (fst (D.tcons_of_bexpr (D.getenv thread_domain) b)))) then  *)
           (*   Format.printf "La condition booléenne %s est linéaire@." (sprint_bexpr b) *)
           (* else Format.printf "La condition booléenne %s n'est PAS linéaire@." (sprint_bexpr b); *)
-          let thread_domain_i = apply_all thread_domain t_id union in
+(*          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in*)
+          let th_d = thread_domain in
+          let thread_domain_i = apply_all th_d t_id union in
           if (!log_domains) then Format.printf "CIf@.";
           if(!log_domains) then print_domain thread_domain_i "Before :" "";
           let t_domain, f_domain, err = D.filter thread_domain_i b in
@@ -279,9 +282,10 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
               print_domain (D.join dom_true dom_false) "Join" "";
             );
           let i, d = (D.join interf_t (D.join int_true int_false)), (D.join dom_true dom_false) in
-          i, (enforce_label d ("_aux_"^(!threadname.(t_id))) l' nb_lab)
+          i, d
         | A.CWhile (l, l', b, c) -> if (!log_domains) then Format.printf "CWhile\n"; 
-          let in_domain_, out_domain, _ = D.filter thread_domain b in
+          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
+          let in_domain_, out_domain, _ = D.filter th_d b in
           let in_domain = apply_all in_domain_ t_id union in
           (* print_domain in_domain_ "in_domain_ " ""; *)
           (* print_domain in_domain "in_domain " ""; *)
@@ -309,7 +313,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           let (_, r2, _) =  (D.filter d b)
           in 
           let i, d = (D.join i interf_t, D.join r2 out_domain) in
-          i, (enforce_label d ("_aux_"^(!threadname.(t_id))) l' nb_lab) (* TODO : filtrer d ou pas ?*)
+          i, d
       and fp t_id boexpr c beg_domain beg_interf_t glob_interf ann_prog analysis calc_onestep lincons =  
         (* TODO : arguments -- donner t_id, interferences Retour : plut^ot domaines ET interférences non ? *)
         let interfs = ref beg_interf_t in

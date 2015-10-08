@@ -108,6 +108,7 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
       | ICIf (bl, iexp, t, f) -> 
         let lab = !label_count in
         let rt = (extract_cmd env i b t) in
+        label_count := lab;
         let rf = (extract_cmd env i b f) in
         let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
         A.CIf (lab, nextlabel, (extract_bexpr env i b iexp), rt, rf)
@@ -121,7 +122,7 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
     let transform_varlist i b = 
       (List.map (fun x -> (x, `Int)) i)@(List.map (fun x -> (x, `Bool)) b)
 
-    let lmax x = (int_of_float) (ceil ((log (float_of_int (x+1))) /. log 2.));;
+    let lmax x = if(x <= 1) then 1 else (int_of_float) (ceil ((log (float_of_int (x+1))) /. log 2.));;
 
 
     let extract_prog l = 
