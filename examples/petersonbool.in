@@ -6,9 +6,9 @@ thread a:
 begin
   flag0 = true;
   turn = 1;
-  assume not (flag1 and turn == 1);
+@  assume not (flag1 and turn == 1);
 @ x = 8;
-@ flag0 = false;
+ flag0 = false;
 end
 
 
@@ -16,7 +16,7 @@ thread b:
 begin
   flag1 = true;
   turn = 0;
-  assume not (flag0 and turn == 0);
+@  assume not (flag0 and turn == 0);
 @ x = 4;
-@ flag1 = false;
+ flag1 = false;
 end
