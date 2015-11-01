@@ -7,7 +7,7 @@ begin
 /*while true do*/
   flag0 = true;
   turn = 1;
-@  assume (flag1==false or turn == 0);
+  assume (flag1==false or turn == 0);
 @  x = 8;
   x = x + 1; 
   flag0 = false;
@@ -20,7 +20,7 @@ begin
 /*while true do*/
   flag1 = true;
   turn = 0;
-@  assume (flag0==false or turn == 1);
+  assume (flag0==false or turn == 1);
 @    x = 4;
   x = x + 1;
   flag1 = false;

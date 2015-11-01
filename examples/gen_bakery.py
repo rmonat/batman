@@ -1,4 +1,4 @@
-n = 6
+n = 4
 batman = True
 
 choosing = ["choosing" + str(x) for x in xrange(0, n)]
@@ -19,11 +19,11 @@ for i in xrange(0, n):
     for j in xrange(0, n):
         if (j != i):
             thread += "\twhile (choosing%d) do skip; done;\n" % j
-            thread += "%s\tif (num%d > 0 and (num%d < num%d or (num%d == num%d and %d < %d))) then\n" % ("@" if batman else "", j, j, i, j, i, j, i)
+            thread += "\tif (num%d > 0 and (num%d < num%d or (num%d == num%d and %d < %d))) then\n" % (j, j, i, j, i, j, i)
             thread += "\t\twhile (num%d > 0) do skip; done;\n" % j
             thread += "\tendif;\n\n"
 
-    thread += "\tx = %d;\n" % (2*i+1)
+    thread += "%s\tx = %d;\n" % ("@" if batman else "", 2*i+1)
     thread += "\tx = x + 1;\n\n"
 
     thread += "\tnum%d = 0;\n" % i
