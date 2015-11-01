@@ -12,21 +12,23 @@ print init
 
 for i in xrange(0, n):
     thread = "thread t%d:\nbegin\n" % i
-    thread += "\tchoosing%d = true;\n" % i
-    thread += "\tnum%d = 1 + %s;\n" % (i, ' + '.join(num))
-    thread += "\tchoosing%d = false;\n\n" % i
+    thread += "\twhile (true) do\n"
+    thread += "\t\tchoosing%d = true;\n" % i
+    thread += "\t\tnum%d = 1 + %s;\n" % (i, ' + '.join(num))
+    thread += "\t\tchoosing%d = false;\n\n" % i
 
     for j in xrange(0, n):
         if (j != i):
-            thread += "\twhile (choosing%d) do skip; done;\n" % j
-            thread += "\tif (num%d > 0 and (num%d < num%d or (num%d == num%d and %d < %d))) then\n" % (j, j, i, j, i, j, i)
-            thread += "\t\twhile (num%d > 0) do skip; done;\n" % j
-            thread += "\tendif;\n\n"
+            thread += "\t\twhile (choosing%d) do skip; done;\n" % j
+            thread += "%s\t\tif (num%d > 0 and (num%d < num%d or (num%d == num%d and %d < %d))) then\n" % ("@" if batman and ((j == n-1) or (i == n-1 and j == n-2)) else "", j, j, i, j, i, j, i)
+            thread += "\t\t\twhile (num%d > 0) do skip; done;\n" % j
+            thread += "\t\tendif;\n\n"
 
-    thread += "%s\tx = %d;\n" % ("@" if batman else "", 2*i+1)
-    thread += "\tx = x + 1;\n\n"
+    thread += "\t\tx = %d;\n" % (2*i+1)
+    thread += "\t\tx = x + 1;\n\n"
 
-    thread += "\tnum%d = 0;\n" % i
+    thread += "\t\tnum%d = 0;\n" % i
+    thread += "\tdone;"
     thread += "end\n\n"
     print thread
     

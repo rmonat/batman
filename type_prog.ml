@@ -90,32 +90,34 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
       | ICSkip -> A.CSkip
 
       | ICAssign (bl, v, e) -> 
+        let lab = !label_count in
         let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
         if (List.mem v i) then
-          A.CAssign  (nextlabel, nextlabel, v, (D.apron_expr (extract_aexpr env i b e)))
+          A.CAssign  (lab, nextlabel, v, (D.apron_expr (extract_aexpr env i b e)))
         else
-          A.CAssign (nextlabel, nextlabel, v, (D.bool_expr (extract_bexpr env i b e)))
+          A.CAssign (lab, nextlabel, v, (D.bool_expr (extract_bexpr env i b e)))
 
       | ICAssume (bl, iexp) -> 
+        let lab = !label_count in
         let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
-        A.CAssume (nextlabel, nextlabel, (extract_bexpr env i b iexp))
+        A.CAssume (lab, nextlabel, (extract_bexpr env i b iexp))
 
       | ICSeq (c1, c2) -> 
         let r1 = (extract_cmd env i b c1) in A.CSeq (r1, (extract_cmd env i b c2))
 
       | ICIf (bl, iexp, t, f) -> 
-        let lab = if bl then (incr label_count; (!label_count)) else !label_count in
+        let lab = !label_count in
         let rt = (extract_cmd env i b t) in
-        let nextlabel = lab in
         label_count := lab;
         let rf = (extract_cmd env i b f) in
-        let nextlabel = max nextlabel (!label_count) in
+        let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
         A.CIf (lab, nextlabel, (extract_bexpr env i b iexp), rt, rf)
 
       | ICWhile (bl, iexp, c) ->
-        let lab = if bl then (incr label_count; (!label_count)) else !label_count in
+        let lab = !label_count in
         let r = extract_cmd env i b c in
-        A.CWhile (lab, !label_count, (extract_bexpr env i b iexp), r)
+        let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
+        A.CWhile (lab, nextlabel, (extract_bexpr env i b iexp), r)
 
     let transform_varlist i b = 
       (List.map (fun x -> (x, `Int)) i)@(List.map (fun x -> (x, `Bool)) b)
