@@ -13,10 +13,13 @@ report: rmonat.fr/batman/report.pdf
 == Dependencies ==
 Apron or bddapron, depending on the branch.
 Ocamlbuild
+Menhir
 
 Easiest way to install: use OPAM, 
 
 	opam init --comp 4.02.1
-	opam install apron
+	opam depext apron bddapron conf-ppl menhir
+	opam install apron bddapron conf-ppl menhir
+	make
 
 A VM is available at rmonat.fr/batman.html
