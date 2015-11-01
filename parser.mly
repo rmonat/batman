@@ -36,6 +36,7 @@
 %token T_BOR
 %token T_BAND
 %token T_NOT
+%token T_NEQUAL
 %token T_BEQUAL
 %token T_BLESS
 %token T_BLESSE
@@ -78,7 +79,7 @@
 %left T_BOR
 %left T_BAND
 %nonassoc T_NOT
-%left T_BEQUAL
+%left T_BEQUAL T_NEQUAL
 %left T_BLESS T_BLESSE T_GREATER T_GREATERE T_EQUAL
 %left T_PLUS T_MINUS
 %left T_TIMES T_DIVIDED T_PERCENT
@@ -111,6 +112,7 @@ exp :
 | x = T_BOOL {if(x = true) then IBTrue else IBFalse}
 | x = exp T_BAND y = exp {IBand (x, y)}
 | x = exp T_BOR y = exp {IBor (x, y)}
+| x = exp T_NEQUAL y = exp {IBNot (IBequal (x, y))}
 | x = exp T_BEQUAL y = exp {IBequal (x, y)}
 | x = exp T_BLESS y = exp {IBless (x, y)}
 | x = exp T_BLESSE y = exp {IBlesse (x, y)}

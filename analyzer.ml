@@ -17,6 +17,7 @@
 (*                                                                         *)
 (* Copyright (C) Raphaël Monat 2015.                                       *)
 
+(* Faire un module d'affichage que l'on passe à analyze ? *)
 (*TODO
 - changer les perint. Verifier interférences avec booléens. Changer la partie sur les dimensions : à la place, garder les variables et les variables' qui de toute façon ne changent en fait pas au fil du temps
 

@@ -45,12 +45,12 @@ module BDDAPRON_DOMAIN(Param: BDDAPRON_PARAM) =
         (begin fun () -> Format.printf "@.CUDD GC@." end)
         (begin fun () -> Format.printf "@.CUDD REORDER@." end);;
 
-    let cudd = Cudd.Man.make_v ()
+    let cudd = let res = Cudd.Man.make_v () in res
     let cond = Cond.make ~symbol:Env.string_symbol cudd
     (*let env = Env.make ~symbol:Env.string_symbol cudd*)
 
 
-    let mkenv () =  Env.make ~symbol:Env.string_symbol ~relational:true cudd
+    let mkenv () =  Env.make ~bddsize:1000 ~symbol:Env.string_symbol ~relational:true cudd
     let empty () = Mtbdddomain1.top man (Env.make ~symbol:Env.string_symbol cudd)
 
     let top env = Mtbdddomain1.top man env

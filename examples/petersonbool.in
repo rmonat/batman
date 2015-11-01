@@ -4,19 +4,25 @@ initial flag0 == false and flag1 == false and turn == 0 and x == 0;
 
 thread a:
 begin
+/*while true do*/
   flag0 = true;
   turn = 1;
-@  assume not (flag1 and turn == 1);
-@ x = 8;
- flag0 = false;
+@  assume (flag1==false or turn == 0);
+@  x = 8;
+  x = x + 1; 
+  flag0 = false;
+/*done;*/
 end
 
 
 thread b:
 begin
+/*while true do*/
   flag1 = true;
   turn = 0;
-@  assume not (flag0 and turn == 0);
-@ x = 4;
- flag1 = false;
+@  assume (flag0==false or turn == 1);
+@    x = 4;
+  x = x + 1;
+  flag1 = false;
+/*done;*/
 end

@@ -45,6 +45,7 @@ rule lexer = parse
 | "&&" { T_BAND }
 | "and" { T_BAND }
 | "not" { T_NOT }
+| "!=" { T_NEQUAL }
 | "==" { T_BEQUAL }
 | "<" { T_BLESS }
 | "<=" { T_BLESSE }

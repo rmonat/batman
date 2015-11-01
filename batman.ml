@@ -26,7 +26,8 @@ module PolyAnalyzer = Analyzer.Iterator(Bddapron_domain.PolkaDomain)
 module OctAnalyzer = Analyzer.Iterator(Bddapron_domain.OctagonDomain)
 module PplAnalyzer = Analyzer.Iterator(Bddapron_domain.PplDomain)
 
-module Typrog = TypeProg(Bddapron_domain.PolkaDomain)
+module PolyTyprog = TypeProg(Bddapron_domain.PolkaDomain)
+module OctTyprog = TypeProg(Bddapron_domain.OctagonDomain)
 
 let string_of_position p =
   Printf.sprintf "%s:%i:%i" p.pos_fname p.pos_lnum (p.pos_cnum - p.pos_bol)
@@ -36,6 +37,7 @@ let parse_args () =
   let logfp = ref false in
   let logdomains = ref false in
   let logglobal = ref false in
+  let oct = ref false in
   let widening_incr_step = ref 2 in
   let widening_decr_step = ref 2 in
   let widening_interf_step = ref 2 in
@@ -48,11 +50,12 @@ let parse_args () =
                   ("--wi", Arg.Int (fun x -> widening_incr_step := x), "Nombre d'increasing operations avant de faire un widening");
                   ("--wd", Arg.Int (fun x -> widening_decr_step := x), "Nombre de decreasing operations après un widening");
                   ("--winterf", Arg.Int (fun x -> widening_interf_step := x), "Nombre d'iterations avant de faire du widening sur les interférences, après chaque analyse des threads");
-                  ("--waffinterf", Arg.Int (fun x -> widening_interf_aff_step := x), "Nombre d'iterations avant de faire du widening pendant l'application d'interférences dans une affectation");]
+                  ("--waffinterf", Arg.Int (fun x -> widening_interf_aff_step := x), "Nombre d'iterations avant de faire du widening pendant l'application d'interférences dans une affectation");
+                 ("--oct", Arg.Set oct, "Use octagons instead of polyhedra");]
   in 
   let usage_msg = "This is BATMAN, a BAsic Thread-Modular ANalyzer. Avalaible options:" in 
   Arg.parse speclist (fun x -> filename := x) usage_msg;
-  (!logi, !logfp, !logdomains, !logglobal, !widening_incr_step, !widening_decr_step, !widening_interf_step, !widening_interf_aff_step, !filename)
+  (!oct, !logi, !logfp, !logdomains, !logglobal, !widening_incr_step, !widening_decr_step, !widening_interf_step, !widening_interf_aff_step, !filename)
 
 
 
@@ -76,9 +79,18 @@ let parse_file filename =
       failwith "Parse error"
 
 let calc () =
-  let logi, logfp, logd, logg, wis, wds, winterfstep, waff, filename = parse_args () in
-  let iprog = parse_file filename in 
-  let prog, env = Typrog.extract_prog iprog in
-  PolyAnalyzer.global_analysis prog env (logi, logfp, logd, logg, wis, wds, winterfstep, waff)
-
+  let oct, logi, logfp, logd, logg, wis, wds, winterfstep, waff, filename = parse_args () in
+  let iprog = parse_file filename in
+  let args = (logi, logfp, logd, logg, wis, wds, winterfstep, waff) in
+  if (oct) then
+    (
+      let prog, env = OctTyprog.extract_prog iprog in
+      OctAnalyzer.global_analysis prog env args
+    )
+  else
+    (
+      let prog, env = PolyTyprog.extract_prog iprog in
+      PolyAnalyzer.global_analysis prog env args
+    )
+        
 let _ = calc ()
