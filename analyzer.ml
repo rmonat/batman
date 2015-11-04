@@ -500,8 +500,11 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
         let is_stable = ref true in
         if(!log_global) then Format.printf "@.Analyze_onestep, stepn = %d\n" stepn;
         let newidomains = Array.make nbprogs (D.bot (D.getenv interf.(0))) in
+        let s = ref "" in
         for x = 0 to nbprogs-1 do
           let A.Thread (id, _, _, _) = realthreads.(x) in 
+          s := !s ^ Format.sprintf "thread %s:\nbegin\n" id;
+          open_indent ();
           idomains.(x) <- apply_all (init_domains.(x)) x interf;
           if(!log_global || !log_i) then Format.fprintf Format.std_formatter "@.\tAnalysing thread %d (ie %s)@." x id;
           if(!log_domains) then
@@ -509,8 +512,10 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
               print_domain domains.(x) "\tOldDomain : " "";
               print_domain interf.(x) "\tOldInterf_t :" "\n";
             );
-          let s = ref "" in
-          let (i, d) = analyze realprog.(x) x (interf, interf.(x)) idomains.(x) false s lincons.(x) maxlab.(x) in
+          s := !s ^ Format.sprintf "%s%s\n" (tabs ()) (sprint_domain_only idomains.(x));
+          let (i, d) = analyze realprog.(x) x (interf, interf.(x)) idomains.(x) true s lincons.(x) maxlab.(x) in
+          s := !s ^ Format.sprintf "end\n\n";
+          close_indent ();
           (*Format.printf "%s\n\n" !s;*)
           if (stepn < !widening_interf_step) then
             newidomains.(x) <- i
@@ -527,6 +532,11 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
         for x = 0 to nbprogs-1 do
           interf.(x) <- newidomains.(x)
         done;
+        if(!is_stable) then
+          (
+            Format.printf "@.Analysis completed in %d steps\n" stepn;
+            Format.printf "%s" !s;
+          );
         !is_stable
       in
       let n = ref 1 in
@@ -535,20 +545,20 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
         if(!log_domains) then print_result nbprogs domains interf
       done;
 
-      Format.printf "@.Analysis completed in %d steps\n" !n;
-      let s = ref "" in
-      for x = 0 to nbprogs-1 do
-        let A.Thread (id, _, _, _) = realthreads.(x) in 
-        s := !s ^ Format.sprintf "thread %s:\nbegin\n" id;
-        open_indent ();
-        idomains.(x) <- apply_all (init_domains.(x)) x interf;
-        if(!log_global || !log_i) then Format.fprintf Format.std_formatter "@.\tAnalysing thread %d (ie %s)@." x id;
-        s := !s ^ Format.sprintf "%s%s\n" (tabs ()) (sprint_domain_only idomains.(x));
-        let useless = analyze realprog.(x) x (interf, interf.(x)) (idomains.(x)) true s lincons.(x) maxlab.(x) in
-        s := !s ^ Format.sprintf "end\n\n";
-        close_indent ();
-      done;
-      Format.printf "%s" !s;
+      (* Format.printf "@.Analysis completed in %d steps\n" !n; *)
+      (* let s = ref "" in *)
+      (* for x = 0 to nbprogs-1 do *)
+      (*   let A.Thread (id, _, _, _) = realthreads.(x) in  *)
+      (*   s := !s ^ Format.sprintf "thread %s:\nbegin\n" id; *)
+      (*   open_indent (); *)
+      (*   idomains.(x) <- apply_all (init_domains.(x)) x interf; *)
+      (*   if(!log_global || !log_i) then Format.fprintf Format.std_formatter "@.\tAnalysing thread %d (ie %s)@." x id; *)
+      (*   s := !s ^ Format.sprintf "%s%s\n" (tabs ()) (sprint_domain_only idomains.(x)); *)
+      (*   let useless = analyze realprog.(x) x (interf, interf.(x)) (idomains.(x)) true s lincons.(x) maxlab.(x) in *)
+      (*   s := !s ^ Format.sprintf "end\n\n"; *)
+      (*   close_indent (); *)
+      (* done; *)
+      (* Format.printf "%s" !s; *)
 
       print_result nbprogs domains interf;
       let res_final = ref domains.(0) in
