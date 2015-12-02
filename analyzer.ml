@@ -529,6 +529,8 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
               print_domain newidomains.(x) "\n\tNewInterf_t : " "";
             );
         done;
+        if(!log_global) then
+          Format.printf "%s" !s;
         for x = 0 to nbprogs-1 do
           interf.(x) <- newidomains.(x)
         done;

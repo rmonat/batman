@@ -78,8 +78,8 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
 
       | IBlesse (x, y) -> D.apron_supeq (extract_aexpr env i b (IAMinus(y, x))) (*x <= y <==> y-x >= 0*)
       | IBless (x, y) -> D.apron_sup (extract_aexpr env i b (IAMinus(y, x)))
-      | IBgreater (x, y) -> D.apron_sup  (extract_aexpr env i b (IAMinus(y, x)))
-      | IBgreatere (x, y) -> D.apron_supeq  (extract_aexpr env i b (IAMinus(y, x)))
+      | IBgreater (x, y) -> D.apron_sup  (extract_aexpr env i b (IAMinus(x, y)))
+      | IBgreatere (x, y) -> D.apron_supeq (extract_aexpr env i b (IAMinus(x, y)))
       | IBTrue -> D.bool_true env
       | IBFalse -> D.bool_false env
       | _ -> failwith "not purely boolean expression [extract_bexpr env]"

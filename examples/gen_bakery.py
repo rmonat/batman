@@ -1,4 +1,4 @@
-n = 4
+n = 3
 batman = True
 
 choosing = ["choosing" + str(x) for x in xrange(0, n)]
