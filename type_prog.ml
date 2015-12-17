@@ -1,4 +1,4 @@
-(* This file is part of the Batman analyzer, released under GPLv3          *)
+1(* This file is part of the Batman analyzer, released under GPLv3          *)
 (* license. Please read the COPYING file packaged in the distribution.     *)
 (*                                                                         *)
 (* The Batman analyzer is free software: you can redistribute it and/or    *)
@@ -108,16 +108,20 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
       | ICIf (bl, iexp, t, f) -> 
         let lab = !label_count in
         let rt = (extract_cmd env i b t) in
-        label_count := lab;
+        (*        label_count := lab;*)
+        incr label_count;
         let rf = (extract_cmd env i b f) in
         let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
+        incr label_count;
         A.CIf (lab, nextlabel, (extract_bexpr env i b iexp), rt, rf)
 
       | ICWhile (bl, iexp, c) ->
         let lab = !label_count in
+        label_count := !label_count + 2;
         let r = extract_cmd env i b c in
+        incr label_count;
         let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
-        A.CWhile (lab, nextlabel, (extract_bexpr env i b iexp), r)
+        A.CWhile (lab, lab+1, nextlabel, (extract_bexpr env i b iexp), r)
 
     let transform_varlist i b = 
       (List.map (fun x -> (x, `Int)) i)@(List.map (fun x -> (x, `Bool)) b)

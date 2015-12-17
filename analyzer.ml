@@ -193,7 +193,33 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
       (*let dom5, _, _ = D.filter dom3 (BNot (Bequal ((AVar v), (AVar (v ^ "'"))))) in (* et là on veut l'expression y = y' car on prend la négation sur le filter car après pbs d'implémentations*) *)
       if (!log_i) then print_domain dom3 "\t\tdom3 (calc_interf) = " "";
       dom3
-        (* faire un filter ?*)
+    (* faire un filter ?*)
+
+    let is_some x = match x with
+      | None -> false
+      | Some a -> true;;
+    
+    let add_transition labi labf labmax interf_t auxvar b env =
+      (* adds a transition t consisting of auxvar = labi; auxvar = labf and b is verified. returns t join interf_t *)
+      (* this way : start from top. Filter b, then assign all variables to ', then add old vars, then assign auxvar and auxvar'*)
+      (*Format.printf "%d %d@." labi labf;*)
+      let top = D.top env in
+      let tmp = ref top in
+      if ((is_some b)) then
+        (
+          let Some bol = b in
+          let tmp2, _, _ = D.filter !tmp (bol) in
+          tmp := tmp2;
+        );
+      tmp := D.ren_vars !tmp !toremove !newvars;
+      tmp := D.add_vars ~init:false !tmp !toremove;
+      let tmp2 = ref top in
+      tmp2 := D.add_vars ~init:false !tmp2 !newvars;
+      List.iter (fun x -> if((fst x) <> auxvar) then tmp2 := fst (D.assign !tmp2 ((fst x)^"'") (D.expr_var (D.getenv !tmp2) (fst x)))) !toremove;
+      tmp := D.meet !tmp !tmp2;
+      tmp := fst (D.assign !tmp (auxvar^"'") (D.bint_expr (D.bint_cst (D.getenv !tmp) labmax labf)));
+      tmp := fst (D.assign !tmp (auxvar) (D.bint_expr (D.bint_cst (D.getenv !tmp) labmax labi)));
+      D.join interf_t !tmp
 
     (* force that only var=label in dom *)
     let enforce_label dom var label labmax = 
@@ -235,7 +261,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
           let (i, d) = (calc_interf th_d v e interf_t t_id l l' nb_lab), (calc_assign v e t_id th_d union t_id l l' nb_lab) 
           in
-          if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d/%d]%s = %s;[%d/%d]\n%s%s\n" (tabs ()) l nb_lab v (sprint_exp e) l' nb_lab (tabs ()) (sprint_domain_only d));
+          if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d]%s = %s;[%d]\n%s%s\n" (tabs ()) l v (sprint_exp e) l' (tabs ()) (sprint_domain_only d));
           i, d
         | A.CAssume (l, l', e) -> 
           let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
@@ -261,7 +287,9 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           if (ann_prog) then
             (
               analysis := !analysis ^ (Format.sprintf "%s[%d]if %s then\n"  (tabs ()) l (sprint_bexpr b));
-              open_indent ()
+              open_indent ();
+              analysis := !analysis ^ (Format.sprintf "%s %s\n" (tabs ()) (sprint_domain_only t_domain));
+                
             );
           let int_true, dom_true = analyze t t_id (union, interf_t) t_domain ann_prog analysis lincons nb_lab in
           if (ann_prog) then
@@ -269,6 +297,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
               close_indent ();
               analysis := !analysis ^ (Format.sprintf "%selse\n" (tabs ()));
               open_indent ();
+              analysis := !analysis ^ (Format.sprintf "%s %s\n" (tabs ()) (sprint_domain_only f_domain));
             );
           let int_false, dom_false = analyze f t_id (union, interf_t) f_domain ann_prog analysis lincons nb_lab in (* danger sur les interferences ? clairement. Comment gérer ça ?*)
           if (ann_prog) then
@@ -284,16 +313,23 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
             );
           let i, d = (D.join interf_t (D.join int_true int_false)), (D.join dom_true dom_false) in
           i, d
-        | A.CWhile (l, l', b, c) -> if (!log_domains) then Format.printf "CWhile\n"; 
+        | A.CWhile (l, lb, l', b, c) -> if (!log_domains) then Format.printf "CWhile\n"; 
           let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
           let in_domain_, out_domain, _ = D.filter th_d b in
           let in_domain = apply_all in_domain_ t_id union in
-          (* print_domain in_domain_ "in_domain_ " ""; *)
-          (* print_domain in_domain "in_domain " ""; *)
-          (*let in_intf, out_intf = interf_t, interf_t in (* TODO : filtrer les interférences ? ça n'a aucun sens ?!*)*)
+          if (!log_i) then print_domain interf_t "interf before basic labels" "";
+          (* we need to create basic interferences *)
+          (* one from l to lb*)
+          let interf_t = add_transition l lb nb_lab interf_t ("_aux_"^(!threadname.(t_id))) None (D.getenv in_domain) in
+          (* one from the last label (l') to lb*)
+          let interf_t = add_transition l' lb nb_lab interf_t ("_aux_"^(!threadname.(t_id))) None (D.getenv in_domain) in
+          (* one from lb to lb+1 if b is verified*)
+          let interf_t = add_transition lb (lb+1) nb_lab interf_t ("_aux_"^(!threadname.(t_id))) (Some b) (D.getenv in_domain) in
+          if (!log_i) then print_domain interf_t "interf after basic labels" "";
+        
           if (ann_prog) then
             (
-              analysis := !analysis ^ (Format.sprintf "%s[%d]while %s do\n" (tabs ()) l (sprint_bexpr b));
+              analysis := !analysis ^ (Format.sprintf "%s[%d]while [%d]%s do\n" (tabs ()) l lb (sprint_bexpr b));
               open_indent ();
             );
           let s = ref "" in
@@ -318,7 +354,8 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
       and fp t_id boexpr c beg_domain beg_interf_t glob_interf ann_prog analysis calc_onestep lincons =  
         (* TODO : arguments -- donner t_id, interferences Retour : plut^ot domaines ET interférences non ? *)
         let interfs = ref beg_interf_t in
-        let rec increase nb_inc domain = 
+        let rec increase nb_inc domain =
+          (* increasing iterations. At the beginning, when nb_inc > 0 we only do joins. Then we use the widening operator (with thresholds) until a fixpoint is reached *)
           if (!log_fp) then print_domain domain "\tDomain = " "";
           if (nb_inc > 0) then 
             (
@@ -326,6 +363,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
                 (
                   Format.fprintf Format.std_formatter "\tincreaseif\n";
                   print_domain !interfs "\t!interfs" "";
+                  print_domain domain "\tdomain" "";
                 );
 (*              let domain_in, _,_ = D.filter domain boexpr in
                 let i, d = analyze c t_id (glob_interf, !interfs) domain_in false (ref "") in*)
@@ -407,7 +445,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
             let _, d, _ = D.filter init_domain b in
             search ct (search cf (d::acc))
           | A.CSeq (c1, c2) -> search c2 (search c1 acc) 
-          | A.CWhile (l, l', b, c) -> search c acc
+          | A.CWhile (l, lb, l', b, c) -> search c acc
           | _ -> acc
         in
         let dom_array = Array.of_list (search prog []) in
@@ -482,11 +520,14 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
         (* Format.printf "@."; *)
 
         let initialized, _, _ = D.filter idomains.(x) bexpr_init in
+        print_domain initialized "init domainsq : " "";
+
         let initd = ref initialized in
         for i = 0 to nbprogs-1 do
           initd := (enforce_label (!initd) ("_aux_"^(!threadname.(i))) 0 maxlab.(i));
 (*          Format.printf "initd, enforcing _aux_%s: %s\n" (!threadname.(i)) (sprint_domain_only (!initd));*)
         done;
+        print_domain (!initd) "init domains after labels : " "";
         idomains.(x) <- !initd;
         init_domains.(x) <- !initd;
         (* interf.(x) <- (D.add_vars (\* ~init:false *\) interf.(x) vars); *)

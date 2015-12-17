@@ -40,12 +40,14 @@ module BDDAPRON_DOMAIN(Param: BDDAPRON_PARAM) =
     type label = int
 
     let init () = 
-      Cudd.Man.print_limit := 200; 
+      Cudd.Man.print_limit := 10000; 
       Cudd.Man.set_gc 10000
-        (begin fun () -> Format.printf "@.CUDD GC@." end)
+        (begin fun () -> Format.printf "@.CUDD BLI GC@." end)
         (begin fun () -> Format.printf "@.CUDD REORDER@." end);;
 
-    let cudd = let res = Cudd.Man.make_v () in res
+    let cudd =
+      let res = Cudd.Man.make_v () in
+      res
     let cond = Cond.make ~symbol:Env.string_symbol cudd
     (*let env = Env.make ~symbol:Env.string_symbol cudd*)
 

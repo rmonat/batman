@@ -41,7 +41,7 @@ module Abs(D:BDD_ABSTRACT_DOMAIN) =
       | CAssume of lab * lab * bexpr
       | CSeq of cmd * cmd
       | CIf of lab * lab * bexpr * cmd * cmd
-      | CWhile of lab * lab * bexpr * cmd
+      | CWhile of lab * lab * lab * bexpr * cmd
 
     type vardecl = var * string Bddapron.Env.typ
 
