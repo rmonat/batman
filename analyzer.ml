@@ -1,3 +1,5 @@
+(*TODO URGENT : si on a l2 if(y < 10) then l3, ajouter l'interference l2 -> l3 ?*)
+
 (* This file is part of the Batman analyzer, released under GPLv3          *)
 (* license. Please read the COPYING file packaged in the distribution.     *)
 (*                                                                         *)
@@ -314,17 +316,26 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           let i, d = (D.join interf_t (D.join int_true int_false)), (D.join dom_true dom_false) in
           i, d
         | A.CWhile (l, lb, l', b, c) -> if (!log_domains) then Format.printf "CWhile\n"; 
-          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
+          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) lb nb_lab) in
           let in_domain_, out_domain, _ = D.filter th_d b in
           let in_domain = apply_all in_domain_ t_id union in
+          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) (lb+1) nb_lab) in
           if (!log_i) then print_domain interf_t "interf before basic labels" "";
           (* we need to create basic interferences *)
           (* one from l to lb*)
           let interf_t = add_transition l lb nb_lab interf_t ("_aux_"^(!threadname.(t_id))) None (D.getenv in_domain) in
-          (* one from the last label (l') to lb*)
-          let interf_t = add_transition l' lb nb_lab interf_t ("_aux_"^(!threadname.(t_id))) None (D.getenv in_domain) in
-          (* one from lb to lb+1 if b is verified*)
+          (* print_domain interf_t "after l -> lb" ""; *)
+          (* one from the last label (l'-1) to lb*)
+          let interf_t = add_transition (l'-1) lb nb_lab interf_t ("_aux_"^(!threadname.(t_id))) None (D.getenv in_domain) in
+          (* print_domain interf_t "after l'-1 -> lb" ""; *)
+
+          (* one from lb to lb+1 if b*)
           let interf_t = add_transition lb (lb+1) nb_lab interf_t ("_aux_"^(!threadname.(t_id))) (Some b) (D.getenv in_domain) in
+          (* print_domain interf_t "after lb -> lb+1 if b" ""; *)
+          (* one from lb to l' if not b*)
+          let interf_t = add_transition lb l' nb_lab interf_t ("_aux_"^(!threadname.(t_id))) (Some (D.bool_not b)) (D.getenv in_domain) in
+          (* print_domain interf_t "interf after negwhile" ""; *)
+
           if (!log_i) then print_domain interf_t "interf after basic labels" "";
         
           if (ann_prog) then
@@ -585,7 +596,7 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
       let n = ref 1 in
       while not (analyze_onestep !n) do
         incr n;
-        if(!log_domains) then print_result nbprogs domains interf
+        if(!log_domains or !log_global) then print_result nbprogs domains interf
       done;
 
       (* Format.printf "@.Analysis completed in %d steps\n" !n; *)

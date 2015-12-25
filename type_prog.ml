@@ -109,10 +109,10 @@ module TypeProg(D:BDD_ABSTRACT_DOMAIN) =
         let lab = !label_count in
         let rt = (extract_cmd env i b t) in
         (*        label_count := lab;*)
-        incr label_count;
+        (* incr label_count; *)
         let rf = (extract_cmd env i b f) in
+        (* incr label_count; *)
         let nextlabel = if bl then (incr label_count; (!label_count)) else !label_count in
-        incr label_count;
         A.CIf (lab, nextlabel, (extract_bexpr env i b iexp), rt, rf)
 
       | ICWhile (bl, iexp, c) ->

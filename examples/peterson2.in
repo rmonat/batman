@@ -7,7 +7,7 @@ begin
   while true do
     b0 = true;
     turn = false;
-    assume(b1==false or turn==true);
+@    assume((not b1) or turn);
     x = 8;
     b0 = false;
   done;
@@ -18,8 +18,8 @@ begin
   while true do
     b1 = true;
     turn = true;
-    assume(b0==false or turn==false);
-    x = 0;
+@    assume((not b0) or (not turn));
+    x = 4;
     b1 = false;
   done;
 end
