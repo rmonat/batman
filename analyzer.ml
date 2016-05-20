@@ -266,9 +266,10 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d]%s = %s;[%d]\n%s%s\n" (tabs ()) l v (sprint_exp e) l' (tabs ()) (sprint_domain_only d));
           i, d
         | A.CAssume (l, l', e) -> 
-          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
-          let r1, _, _ = D.filter th_d e in 
+          (*          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in*)
+          let r1, _, _ = D.filter (*th_d*) thread_domain e in 
           let r = apply_all r1 t_id union in
+          let r = (enforce_label r ("_aux_"^(!threadname.(t_id))) l' nb_lab) in
           if (ann_prog) then analysis := !analysis ^ (Format.sprintf "%s[%d]assume %s[%d]\n%s%s\n" (tabs ()) l (sprint_bexpr e) l' (tabs ()) (sprint_domain_only r)); 
           interf_t, r
         | A.CSeq (c1, c2) -> let i, d = analyze c1 t_id interferences thread_domain ann_prog analysis lincons nb_lab in
@@ -279,8 +280,9 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
           (* if (Texpr1.is_interval_linear (Tcons1.get_texpr1 (fst (D.tcons_of_bexpr (D.getenv thread_domain) b)))) then  *)
           (*   Format.printf "La condition booléenne %s est linéaire@." (sprint_bexpr b) *)
           (* else Format.printf "La condition booléenne %s n'est PAS linéaire@." (sprint_bexpr b); *)
-(*          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in*)
+          (*          let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l nb_lab) in*)
           let th_d = thread_domain in
+          (*let th_d = (enforce_label thread_domain ("_aux_"^(!threadname.(t_id))) l' nb_lab) in*)
           let thread_domain_i = apply_all th_d t_id union in
           if (!log_domains) then Format.printf "CIf@.";
           if(!log_domains) then print_domain thread_domain_i "Before :" "";
