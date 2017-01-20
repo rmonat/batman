@@ -20,7 +20,7 @@
 all: analyzer
 
 analyzer : 
-	ocamlbuild -tag custom -use-menhir batman.byte -use-ocamlfind -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp,bddapron,bddapron.bdd,bddapron.bddapron
+	ocamlbuild -use-menhir batman.byte -use-ocamlfind -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp,bddapron,bddapron.bdd,bddapron.bddapron
 
 debug:
 	ocamlbuild -tag debug -use-menhir batman.d.byte -use-ocamlfind -package apron,apron.apron,apron.boxD,apron.boxMPFR,apron.boxMPQ,apron.octD,apron.octMPQ,apron.polkaGrid,apron.polkaMPQ,apron.polkaRll,apron.ppl,apron.t1pD,apron.t1pMPFR,apron.t1pMPQ,gmp,bddapron,bddapron.bdd,bddapron.bddapron
