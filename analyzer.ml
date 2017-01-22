@@ -533,14 +533,14 @@ module Iterator(D:BDD_ABSTRACT_DOMAIN) =
         (* Format.printf "@."; *)
 
         let initialized, _, _ = D.filter idomains.(x) bexpr_init in
-        print_domain initialized "init domainsq : " "";
+        print_domain initialized "init domains: " "";
 
         let initd = ref initialized in
         for i = 0 to nbprogs-1 do
           initd := (enforce_label (!initd) ("_aux_"^(!threadname.(i))) 0 maxlab.(i));
 (*          Format.printf "initd, enforcing _aux_%s: %s\n" (!threadname.(i)) (sprint_domain_only (!initd));*)
         done;
-        print_domain (!initd) "init domains after labels : " "";
+        print_domain (!initd) "init domains after labels: " "";
         idomains.(x) <- !initd;
         init_domains.(x) <- !initd;
         (* interf.(x) <- (D.add_vars (\* ~init:false *\) interf.(x) vars); *)

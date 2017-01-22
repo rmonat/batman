@@ -1,4 +1,4 @@
-DISCLAIMER: This is a *prototype*. The code might be *not clean*
+DISCLAIMER: This is a *prototype*. The code is *not clean*
 
 This is the code a of BAsic Thread-Modular ANalyzer. It uses Abstract
 Interpretation, and uses Ocaml, Apron/Bddapron, and was created during
@@ -7,19 +7,41 @@ Miné, in the ANTIQUE team, at the ENS Ulm.
 
 This code is (c) Raphaël Monat 2015, and is distributed under a GPLv3 licence.
 
-For more information on this project, please consult my internship
-report: rmonat.fr/batman/report.pdf
-
 == Dependencies ==
-Apron or bddapron, depending on the branch.
-Ocamlbuild
-Menhir
-
 Easiest way to install: use OPAM, 
 
 	opam init --comp 4.02.1
-	opam depext apron bddapron conf-ppl menhir
-	opam install apron bddapron conf-ppl menhir
-	make
+	opam install depext 
 
-A VM is available at rmonat.fr/batman.html
+Then, follow the instructions given by 
+        opam depext apron bddapron.2.2.3 conf-ppl menhir
+
+After having installed the necessary packages, you can run
+        opam install apron bddapron.2.2.3 conf-ppl menhir
+
+Just clone the git depo, and run
+        make
+
+
+== Paper ==
+
+The paper related to this analyzer is ["Precise Thread-Modular Abstract Interpretation of Concurrent Programs Using Relational Interference Abstractions"](https://link.springer.com/chapter/10.1007/978-3-319-52234-0_21).
+
+
+== Examples ==
+
+   ./batman.byte examples/bakery3.bat
+
+
+== Input of the syntax ==
+
+First declare variables and type of variables: `var bli:int, blu:bool;` (only two types, bool and int).
+Then initialize variable using `initial` keyword: `initial bli == 0 and not blu;`.
+
+A thread is declared as follows:
+  thread T:
+  begin
+	your commands
+  end
+
+T is just a string.

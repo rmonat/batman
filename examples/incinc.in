@@ -1,0 +1,13 @@
+var x:int, y:int;
+
+initial x == 0 and y == 0;
+
+thread t0:
+begin
+@  x = x + 1;
+end
+
+thread t1:
+begin
+@ x = x + 1;
+end
